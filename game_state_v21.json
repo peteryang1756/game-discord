@@ -1,0 +1,312 @@
+{
+  "day": 1,
+  "phase": "done",
+  "turn_order": [],
+  "turn_index": 0,
+  "log": [
+    "[SYSTEM] 🎭 V2.3 狼人殺開始。真人玩家正式入局：Petwr 取代 阿J、Petwr 取代 彼得",
+    "[SYSTEM] 玩家：阿哲、小P、顧問、小羊、Petwr、Petwr",
+    "[SYSTEM] 🔐 Petwr，你的身份是：狼人。",
+    "[SYSTEM] 🔐 Petwr，你的身份是：狼人。",
+    "[SYSTEM] 規則：非你的發言時間請不要說話；投票用 /vote 名字；夜晚技能用 /kill /check /save /poison /pass",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
+    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
+    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
+    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
+    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] ⏹ 遊戲已停止。"
+  ],
+  "witch_heal_used": false,
+  "witch_poison_used": false,
+  "wolf_plan": [],
+  "pending_night_deaths": [],
+  "auto_run": false,
+  "last_auto_ts": 1775314671.7860096,
+  "night_prompted_users": [],
+  "human": {
+    "user_id": 0,
+    "name": "",
+    "joined": false,
+    "alive": false,
+    "role": null,
+    "replaced_bot": null,
+    "pending_action": null
+  },
+  "humans": [
+    {
+      "user_id": 7542727150,
+      "name": "Petwr",
+      "joined": true,
+      "alive": true,
+      "role": "狼人",
+      "replaced_bot": "彼得",
+      "pending_action": {
+        "type": "kill",
+        "target": "彼得"
+      }
+    }
+  ],
+  "human_role": null,
+  "agents": [
+    {
+      "idx": 0,
+      "name": "阿哲",
+      "token": "8550197535:AAEARCOL1BX-_zRNQirrKDXXGYd-_74bDMo",
+      "style": "冷靜理性，會抓矛盾，講話短。",
+      "role": "預言家",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你每晚可查驗一人身份。"
+      ],
+      "public_memory": [],
+      "suspicion": {
+        "彼得": 0.39,
+        "小P": 0.45,
+        "顧問": 0.3,
+        "小羊": 0.31,
+        "阿J": 0.42
+      },
+      "trust": {
+        "彼得": 0.32,
+        "小P": 0.17,
+        "顧問": 0.16,
+        "小羊": 0.26,
+        "阿J": 0.19
+      },
+      "grudges": {
+        "彼得": 0.0,
+        "小P": 0.0,
+        "顧問": 0.0,
+        "小羊": 0.0,
+        "阿J": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 1,
+      "name": "彼得",
+      "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc",
+      "style": "話多愛帶節奏，喜歡先壓人。",
+      "role": "狼人",
+      "alive": false,
+      "revealed_role": "替補離場",
+      "private_notes": [
+        "你的狼人隊友是 阿J。"
+      ],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.25,
+        "小P": 0.33,
+        "顧問": 0.47,
+        "小羊": 0.22,
+        "阿J": 0.39
+      },
+      "trust": {
+        "阿哲": 0.22,
+        "小P": 0.17,
+        "顧問": 0.17,
+        "小羊": 0.23,
+        "阿J": 0.28
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "小P": 0.0,
+        "顧問": 0.0,
+        "小羊": 0.0,
+        "阿J": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 2,
+      "name": "小P",
+      "token": "8750936435:AAGEeEV-qmSuVx-oXQi_VlXdQr5P0qhRl7s",
+      "style": "自保型，被踩會反打。",
+      "role": "女巫",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你有解藥與毒藥，各一次。"
+      ],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.4,
+        "彼得": 0.37,
+        "顧問": 0.38,
+        "小羊": 0.35,
+        "阿J": 0.45
+      },
+      "trust": {
+        "阿哲": 0.36,
+        "彼得": 0.15,
+        "顧問": 0.23,
+        "小羊": 0.35,
+        "阿J": 0.38
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "彼得": 0.0,
+        "顧問": 0.0,
+        "小羊": 0.0,
+        "阿J": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 3,
+      "name": "顧問",
+      "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY",
+      "style": "分析師型，常談資訊量、票型、邏輯。",
+      "role": "村民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.26,
+        "彼得": 0.25,
+        "小P": 0.38,
+        "小羊": 0.43,
+        "阿J": 0.4
+      },
+      "trust": {
+        "阿哲": 0.38,
+        "彼得": 0.19,
+        "小P": 0.19,
+        "小羊": 0.15,
+        "阿J": 0.21
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "彼得": 0.0,
+        "小P": 0.0,
+        "小羊": 0.0,
+        "阿J": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 4,
+      "name": "小羊",
+      "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc",
+      "style": "保守膽小，容易跟票，但會記仇。",
+      "role": "村民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.48,
+        "彼得": 0.29,
+        "小P": 0.29,
+        "顧問": 0.39,
+        "阿J": 0.33
+      },
+      "trust": {
+        "阿哲": 0.19,
+        "彼得": 0.38,
+        "小P": 0.32,
+        "顧問": 0.35,
+        "阿J": 0.4
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "彼得": 0.0,
+        "小P": 0.0,
+        "顧問": 0.0,
+        "阿J": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 5,
+      "name": "阿J",
+      "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc",
+      "style": "嘴砲型，故意戳人看反應。",
+      "role": "狼人",
+      "alive": false,
+      "revealed_role": "替補離場",
+      "private_notes": [
+        "你的狼人隊友是 彼得。"
+      ],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.22,
+        "彼得": 0.41,
+        "小P": 0.19,
+        "顧問": 0.35,
+        "小羊": 0.31
+      },
+      "trust": {
+        "阿哲": 0.27,
+        "彼得": 0.34,
+        "小P": 0.36,
+        "顧問": 0.17,
+        "小羊": 0.25
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "彼得": 0.0,
+        "小P": 0.0,
+        "顧問": 0.0,
+        "小羊": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    }
+  ]
+}
