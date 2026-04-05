@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "idx": 0,
+      "name": "阿哲",
+      "token": "8550197535:AAEARCOL1BX-_zRNQirrKDXXGYd-_74bDMo",
+      "style": "冷靜理性，講話短，喜歡抓矛盾",
+      "role": "村民",
+      "alive": true,
+      "revealed": false
+    },
+    {
+      "idx": 1,
+      "name": "彼得",
+      "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc",
+      "style": "話多，喜歡帶節奏",
+      "role": "女巫",
+      "alive": true,
+      "revealed": false
+    },
+    {
+      "idx": 2,
+      "name": "小P",
+      "token": "8750936435:AAGEeEV-qmSuVx-oXQi_VlXdQr5P0qhRl7s",
+      "style": "裝無辜，容易懷疑別人",
+      "role": "狼人",
+      "alive": false,
+      "revealed": false
+    },
+    {
+      "idx": 3,
+      "name": "顧問",
+      "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY",
+      "style": "像分析師，常說機率和邏輯",
+      "role": "村民",
+      "alive": true,
+      "revealed": false
+    },
+    {
+      "idx": 4,
+      "name": "小羊",
+      "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc",
+      "style": "膽小保守，常跟票",
+      "role": "預言家",
+      "alive": true,
+      "revealed": false
+    },
+    {
+      "idx": 5,
+      "name": "阿J",
+      "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc",
+      "style": "嘴砲型，愛挑釁",
+      "role": "狼人",
+      "alive": false,
+      "revealed": false
+    }
+  ],
+  "day": 1,
+  "status": "finished",
+  "winner": "好人"
+}

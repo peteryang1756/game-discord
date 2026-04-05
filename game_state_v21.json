@@ -1,61 +1,23 @@
 {
   "day": 1,
   "phase": "done",
-  "turn_order": [],
-  "turn_index": 0,
+  "game_mode": "undercover",
+  "turn_order": [
+    "阿J",
+    "Petwr",
+    "顧問",
+    "阿哲",
+    "小羊",
+    "彼得"
+  ],
+  "turn_index": 1,
   "log": [
-    "[SYSTEM] 🎭 V2.3 狼人殺開始。真人玩家正式入局：Petwr 取代 阿J、Petwr 取代 彼得",
-    "[SYSTEM] 玩家：阿哲、小P、顧問、小羊、Petwr、Petwr",
-    "[SYSTEM] 🔐 Petwr，你的身份是：狼人。",
-    "[SYSTEM] 🔐 Petwr，你的身份是：狼人。",
-    "[SYSTEM] 規則：非你的發言時間請不要說話；投票用 /vote 名字；夜晚技能用 /kill /check /save /poison /pass",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
-    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
-    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] ✅ 已收到 Petwr 的狼人行動。",
-    "[SYSTEM] 🔐 Petwr 今晚指定目標：彼得",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
-    "[SYSTEM] 🌙 第 1 夜開始，天黑請閉眼。",
-    "[SYSTEM] 🌙 Petwr 你是狼人。請用 /kill 名字 指定今晚目標。",
+    "[SYSTEM] 🕵️ 誰是臥底開始。真人玩家入局：Petwr 取代 小P",
+    "[SYSTEM] 玩家：阿哲、彼得、顧問、小羊、阿J、Petwr",
+    "[SYSTEM] ✅ Petwr 已收到私訊詞語。",
+    "[SYSTEM] 規則：每輪發言描述你的詞但不要直接講出來；之後投票 /vote 名字；可用 /quit 退出本局",
+    "[SYSTEM] 🕵️ 第 1 輪發言開始。請描述你的詞，但不要直接講詞。",
+    "[阿J] 我這個通常是飲料系很常見的基本款，甜度冰塊都很常被調整，學生跟上班族都超常買。硬要說的話我先小懷疑 Petwr，剛進來感覺比較容易抓不到大家節奏。",
     "[SYSTEM] ⏹ 遊戲已停止。"
   ],
   "witch_heal_used": false,
@@ -63,8 +25,17 @@
   "wolf_plan": [],
   "pending_night_deaths": [],
   "auto_run": false,
-  "last_auto_ts": 1775314671.7860096,
+  "last_auto_ts": 1775387983.3217034,
   "night_prompted_users": [],
+  "night_started_day": 0,
+  "night_deadline_ts": 0.0,
+  "human_speech_wait_user_id": 0,
+  "human_speech_deadline_ts": 0.0,
+  "vote_prompted": false,
+  "vote_deadline_ts": 0.0,
+  "undercover_word_civil": "奶茶",
+  "undercover_word_under": "珍珠奶茶",
+  "undercover_name": "顧問",
   "human": {
     "user_id": 0,
     "name": "",
@@ -72,7 +43,8 @@
     "alive": false,
     "role": null,
     "replaced_bot": null,
-    "pending_action": null
+    "pending_action": null,
+    "dm_ready": false
   },
   "humans": [
     {
@@ -80,12 +52,10 @@
       "name": "Petwr",
       "joined": true,
       "alive": true,
-      "role": "狼人",
-      "replaced_bot": "彼得",
-      "pending_action": {
-        "type": "kill",
-        "target": "彼得"
-      }
+      "role": "平民",
+      "replaced_bot": "小P",
+      "pending_action": null,
+      "dm_ready": true
     }
   ],
   "human_role": null,
@@ -95,26 +65,29 @@
       "name": "阿哲",
       "token": "8550197535:AAEARCOL1BX-_zRNQirrKDXXGYd-_74bDMo",
       "style": "冷靜理性，會抓矛盾，講話短。",
-      "role": "預言家",
+      "role": "平民",
       "alive": true,
       "revealed_role": null,
       "private_notes": [
-        "你每晚可查驗一人身份。"
+        "你的狼人隊友是 小羊。",
+        "你是平民，你的詞是「奶茶」。找出臥底。"
       ],
-      "public_memory": [],
+      "public_memory": [
+        "阿J：我這個通常是飲料系很常見的基本款，甜度冰塊都很常被調整，學生跟上班族都超常買。硬要說的話我先小懷疑 Petwr，剛進來感覺比較容易抓不到大家節奏。"
+      ],
       "suspicion": {
-        "彼得": 0.39,
-        "小P": 0.45,
-        "顧問": 0.3,
-        "小羊": 0.31,
-        "阿J": 0.42
+        "彼得": 0.4,
+        "小P": 0.28,
+        "顧問": 0.35,
+        "小羊": 0.42,
+        "阿J": 0.3
       },
       "trust": {
-        "彼得": 0.32,
-        "小P": 0.17,
-        "顧問": 0.16,
-        "小羊": 0.26,
-        "阿J": 0.19
+        "彼得": 0.4,
+        "小P": 0.34,
+        "顧問": 0.26,
+        "小羊": 0.33,
+        "阿J": 0.25
       },
       "grudges": {
         "彼得": 0.0,
@@ -132,26 +105,29 @@
       "name": "彼得",
       "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc",
       "style": "話多愛帶節奏，喜歡先壓人。",
-      "role": "狼人",
-      "alive": false,
-      "revealed_role": "替補離場",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
       "private_notes": [
-        "你的狼人隊友是 阿J。"
+        "你每晚可查驗一人身份。",
+        "你是平民，你的詞是「奶茶」。找出臥底。"
       ],
-      "public_memory": [],
+      "public_memory": [
+        "阿J：我這個通常是飲料系很常見的基本款，甜度冰塊都很常被調整，學生跟上班族都超常買。硬要說的話我先小懷疑 Petwr，剛進來感覺比較容易抓不到大家節奏。"
+      ],
       "suspicion": {
-        "阿哲": 0.25,
-        "小P": 0.33,
-        "顧問": 0.47,
-        "小羊": 0.22,
-        "阿J": 0.39
+        "阿哲": 0.24,
+        "小P": 0.46,
+        "顧問": 0.3,
+        "小羊": 0.46,
+        "阿J": 0.24
       },
       "trust": {
-        "阿哲": 0.22,
-        "小P": 0.17,
-        "顧問": 0.17,
-        "小羊": 0.23,
-        "阿J": 0.28
+        "阿哲": 0.3,
+        "小P": 0.36,
+        "顧問": 0.28,
+        "小羊": 0.2,
+        "阿J": 0.24
       },
       "grudges": {
         "阿哲": 0.0,
@@ -169,26 +145,24 @@
       "name": "小P",
       "token": "8750936435:AAGEeEV-qmSuVx-oXQi_VlXdQr5P0qhRl7s",
       "style": "自保型，被踩會反打。",
-      "role": "女巫",
-      "alive": true,
-      "revealed_role": null,
-      "private_notes": [
-        "你有解藥與毒藥，各一次。"
-      ],
+      "role": "村民",
+      "alive": false,
+      "revealed_role": "替補離場",
+      "private_notes": [],
       "public_memory": [],
       "suspicion": {
-        "阿哲": 0.4,
-        "彼得": 0.37,
-        "顧問": 0.38,
-        "小羊": 0.35,
-        "阿J": 0.45
+        "阿哲": 0.46,
+        "彼得": 0.27,
+        "顧問": 0.22,
+        "小羊": 0.25,
+        "阿J": 0.41
       },
       "trust": {
-        "阿哲": 0.36,
-        "彼得": 0.15,
-        "顧問": 0.23,
-        "小羊": 0.35,
-        "阿J": 0.38
+        "阿哲": 0.39,
+        "彼得": 0.27,
+        "顧問": 0.22,
+        "小羊": 0.39,
+        "阿J": 0.24
       },
       "grudges": {
         "阿哲": 0.0,
@@ -206,24 +180,29 @@
       "name": "顧問",
       "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY",
       "style": "分析師型，常談資訊量、票型、邏輯。",
-      "role": "村民",
+      "role": "臥底",
       "alive": true,
       "revealed_role": null,
-      "private_notes": [],
-      "public_memory": [],
+      "private_notes": [
+        "你有解藥與毒藥，各一次。",
+        "你是臥底，你的詞是「珍珠奶茶」。盡量裝成平民。"
+      ],
+      "public_memory": [
+        "阿J：我這個通常是飲料系很常見的基本款，甜度冰塊都很常被調整，學生跟上班族都超常買。硬要說的話我先小懷疑 Petwr，剛進來感覺比較容易抓不到大家節奏。"
+      ],
       "suspicion": {
-        "阿哲": 0.26,
-        "彼得": 0.25,
-        "小P": 0.38,
-        "小羊": 0.43,
-        "阿J": 0.4
+        "阿哲": 0.39,
+        "彼得": 0.2,
+        "小P": 0.4,
+        "小羊": 0.47,
+        "阿J": 0.25
       },
       "trust": {
-        "阿哲": 0.38,
-        "彼得": 0.19,
-        "小P": 0.19,
-        "小羊": 0.15,
-        "阿J": 0.21
+        "阿哲": 0.23,
+        "彼得": 0.33,
+        "小P": 0.31,
+        "小羊": 0.38,
+        "阿J": 0.15
       },
       "grudges": {
         "阿哲": 0.0,
@@ -241,24 +220,29 @@
       "name": "小羊",
       "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc",
       "style": "保守膽小，容易跟票，但會記仇。",
-      "role": "村民",
+      "role": "平民",
       "alive": true,
       "revealed_role": null,
-      "private_notes": [],
-      "public_memory": [],
+      "private_notes": [
+        "你的狼人隊友是 阿哲。",
+        "你是平民，你的詞是「奶茶」。找出臥底。"
+      ],
+      "public_memory": [
+        "阿J：我這個通常是飲料系很常見的基本款，甜度冰塊都很常被調整，學生跟上班族都超常買。硬要說的話我先小懷疑 Petwr，剛進來感覺比較容易抓不到大家節奏。"
+      ],
       "suspicion": {
-        "阿哲": 0.48,
-        "彼得": 0.29,
-        "小P": 0.29,
-        "顧問": 0.39,
-        "阿J": 0.33
+        "阿哲": 0.3,
+        "彼得": 0.37,
+        "小P": 0.46,
+        "顧問": 0.25,
+        "阿J": 0.41
       },
       "trust": {
-        "阿哲": 0.19,
-        "彼得": 0.38,
-        "小P": 0.32,
-        "顧問": 0.35,
-        "阿J": 0.4
+        "阿哲": 0.22,
+        "彼得": 0.4,
+        "小P": 0.33,
+        "顧問": 0.16,
+        "阿J": 0.39
       },
       "grudges": {
         "阿哲": 0.0,
@@ -276,26 +260,26 @@
       "name": "阿J",
       "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc",
       "style": "嘴砲型，故意戳人看反應。",
-      "role": "狼人",
-      "alive": false,
-      "revealed_role": "替補離場",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
       "private_notes": [
-        "你的狼人隊友是 彼得。"
+        "你是平民，你的詞是「奶茶」。找出臥底。"
       ],
       "public_memory": [],
       "suspicion": {
-        "阿哲": 0.22,
-        "彼得": 0.41,
-        "小P": 0.19,
-        "顧問": 0.35,
-        "小羊": 0.31
+        "阿哲": 0.27,
+        "彼得": 0.33,
+        "小P": 0.21,
+        "顧問": 0.2,
+        "小羊": 0.28
       },
       "trust": {
-        "阿哲": 0.27,
-        "彼得": 0.34,
-        "小P": 0.36,
-        "顧問": 0.17,
-        "小羊": 0.25
+        "阿哲": 0.16,
+        "彼得": 0.23,
+        "小P": 0.33,
+        "顧問": 0.36,
+        "小羊": 0.38
       },
       "grudges": {
         "阿哲": 0.0,

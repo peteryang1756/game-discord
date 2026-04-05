@@ -1,0 +1,67 @@
+{
+  "players": [
+    {
+      "idx": 0,
+      "name": "顧問",
+      "style": "像分析師，常說機率和邏輯",
+      "role": "狼人",
+      "alive": false,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=consultant"
+    },
+    {
+      "idx": 1,
+      "name": "阿J",
+      "style": "嘴砲型，愛挑釁",
+      "role": "預言家",
+      "alive": false,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=aj"
+    },
+    {
+      "idx": 2,
+      "name": "小P",
+      "style": "裝無辜，容易懷疑別人",
+      "role": "女巫",
+      "alive": true,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=xiaop"
+    },
+    {
+      "idx": 3,
+      "name": "阿哲",
+      "style": "冷靜理性，講話短，喜歡抓矛盾",
+      "role": "村民",
+      "alive": true,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=azhe"
+    },
+    {
+      "idx": 4,
+      "name": "彼得",
+      "style": "話多，喜歡帶節奏",
+      "role": "村民",
+      "alive": true,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=peter"
+    },
+    {
+      "idx": 5,
+      "name": "小羊",
+      "style": "膽小保守，常跟票",
+      "role": "狼人",
+      "alive": false,
+      "is_human": false,
+      "user_id": null,
+      "avatar_url": "https://api.dicebear.com/8.x/adventurer/png?seed=sheep"
+    }
+  ],
+  "day": 2,
+  "status": "finished",
+  "winner": "好人"
+}
