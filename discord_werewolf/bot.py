@@ -29,6 +29,8 @@ TURN_SLEEP = float(os.getenv("TURN_SLEEP", "1.8"))
 OPENING_SLEEP = float(os.getenv("OPENING_SLEEP", "1.2"))
 MAX_DAYS = int(os.getenv("MAX_DAYS", "6"))
 DRY_RUN = os.getenv("DRY_RUN", "0") == "1"
+MAX_HUMAN_PLAYERS = int(os.getenv("MAX_HUMAN_PLAYERS", "2"))
+HUMAN_VOTE_TIMEOUT = int(os.getenv("HUMAN_VOTE_TIMEOUT", "35"))
 
 AI_PROFILES = [
     {
@@ -63,6 +65,16 @@ AI_PROFILES = [
     },
 ]
 ROLES = ["狼人", "狼人", "預言家", "女巫", "村民", "村民"]
+UNDERCOVER_WORD_PAIRS = [
+    ("奶茶", "珍珠奶茶"),
+    ("漢堡", "三明治"),
+    ("貓", "狗"),
+    ("火鍋", "麻辣鍋"),
+    ("咖啡", "拿鐵"),
+    ("手機", "平板"),
+    ("電影", "影集"),
+    ("蘋果", "梨子"),
+]
 
 SYSTEM_PROMPT = """
 你在扮演真人玩家玩中文狼人殺，不要提到自己是AI、模型、程式。
@@ -87,6 +99,8 @@ class Agent:
     suspicion: Dict[str, float] = field(default_factory=dict)
     relations: Dict[str, str] = field(default_factory=dict)
     last_target: Optional[str] = None
+    is_human: bool = False
+    user_id: int = 0
 
     def short_state(self) -> Dict:
         return {
@@ -147,6 +161,13 @@ class LLM:
         return data["choices"][0]["message"]["content"].strip()
 
 
+@dataclass
+class HumanPlayer:
+    user_id: int
+    name: str
+    joined: bool = True
+
+
 class WerewolfDiscordBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -162,6 +183,13 @@ class WerewolfDiscordBot(commands.Bot):
         self.witch_heal_used = False
         self.witch_poison_used = False
         self.seer_checks: List[str] = []
+        self.game_mode = "werewolf"
+        self.humans: Dict[int, HumanPlayer] = {}
+        self.human_votes: Dict[int, str] = {}
+        self.stop_requested = False
+        self.undercover_word_civil = ""
+        self.undercover_word_under = ""
+        self.undercover_name = ""
 
     async def setup_hook(self):
         @self.command(name="wolf_start")
@@ -172,6 +200,7 @@ class WerewolfDiscordBot(commands.Bot):
                 await ctx.send("⚠️ 遊戲進行中，請稍候。")
                 return
             self.game_running = True
+            self.stop_requested = False
             try:
                 await self.run_game(ctx.channel)
             finally:
@@ -192,6 +221,7 @@ class WerewolfDiscordBot(commands.Bot):
             await ctx.send(
                 " / ".join(
                     [
+                        f"mode: {state.get('mode', self.game_mode)}",
                         f"status: {state.get('status', '-')}",
                         f"day: {state.get('day', '-')}",
                         f"phase: {state.get('phase', '-')}",
@@ -200,11 +230,109 @@ class WerewolfDiscordBot(commands.Bot):
                 )
             )
 
+        @self.command(name="wolf_changeto2")
+        async def wolf_changeto2(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            if self.game_running:
+                await ctx.send("⚠️ 遊戲進行中，請先用 !wolf_stop。")
+                return
+            self.game_mode = "undercover"
+            await ctx.send("✅ 已切換到「誰是臥底」模式。")
+
+        @self.command(name="wolf_changeto1")
+        async def wolf_changeto1(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            if self.game_running:
+                await ctx.send("⚠️ 遊戲進行中，請先用 !wolf_stop。")
+                return
+            self.game_mode = "werewolf"
+            await ctx.send("✅ 已切換到「狼人殺」模式。")
+
+        @self.command(name="wolf_join")
+        async def wolf_join(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            if self.game_running:
+                await ctx.send("⚠️ 本局已開始，請下一局再加入。")
+                return
+            if ctx.author.id in self.humans:
+                await ctx.send("你已經在真人玩家名單中。")
+                return
+            if len(self.humans) >= MAX_HUMAN_PLAYERS:
+                await ctx.send(f"⚠️ 真人玩家上限為 {MAX_HUMAN_PLAYERS}。")
+                return
+            base_name = (getattr(ctx.author, "display_name", "") or ctx.author.name or "玩家").strip()[:18]
+            taken = {x["name"] for x in AI_PROFILES} | {h.name for h in self.humans.values()}
+            name = base_name or "玩家"
+            if name in taken:
+                name = f"{name[:12]}-{str(ctx.author.id)[-4:]}"
+            self.humans[ctx.author.id] = HumanPlayer(user_id=ctx.author.id, name=name)
+            await ctx.send(f"🙋 真人玩家 {name} 已加入（{len(self.humans)}/{MAX_HUMAN_PLAYERS}）。")
+
+        @self.command(name="wolf_leave")
+        async def wolf_leave(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            human = self.humans.pop(ctx.author.id, None)
+            if not human:
+                await ctx.send("你目前不在真人玩家名單中。")
+                return
+            await ctx.send(f"👋 {human.name} 已離開真人玩家名單。")
+
+        @self.command(name="wolf_players")
+        async def wolf_players(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            if not self.humans:
+                await ctx.send(f"目前沒有真人玩家（上限 {MAX_HUMAN_PLAYERS}）。")
+                return
+            names = "、".join(h.name for h in self.humans.values())
+            await ctx.send(f"真人玩家（{len(self.humans)}/{MAX_HUMAN_PLAYERS}）：{names}")
+
+        @self.command(name="wolf_vote")
+        async def wolf_vote(ctx: commands.Context, *, target: str):
+            if not self._valid_channel(ctx):
+                return
+            if not self.game_running or self.game_mode != "undercover" or self.phase != "vote":
+                await ctx.send("目前不是誰是臥底的投票階段。")
+                return
+            voter = next((a for a in self.alive_agents() if a.is_human and a.user_id == ctx.author.id), None)
+            if not voter:
+                await ctx.send("你不是本局存活的真人玩家。")
+                return
+            alive_names = [a.name for a in self.alive_agents()]
+            if target not in alive_names:
+                await ctx.send(f"⚠️ 無效目標，可投：{'、'.join(alive_names)}")
+                return
+            if target == voter.name:
+                await ctx.send("⚠️ 不能投自己。")
+                return
+            self.human_votes[ctx.author.id] = target
+            await ctx.send(f"✅ 已記錄 {voter.name} 的投票：{target}")
+
+        @self.command(name="wolf_stop")
+        async def wolf_stop(ctx: commands.Context):
+            if not self._valid_channel(ctx):
+                return
+            if not self.game_running:
+                await ctx.send("目前沒有進行中的遊戲。")
+                return
+            self.stop_requested = True
+            await ctx.send("🛑 已收到臨時關閉請求，將在目前步驟結束後停止。")
+
         @self.command(name="wolf_help")
         async def wolf_help(ctx: commands.Context):
             await ctx.send(
                 "指令：\n"
-                f"`{COMMAND_PREFIX}wolf_start` 或 `{COMMAND_PREFIX}start` 開始全 AI Agent + LLM 狼人殺\n"
+                f"`{COMMAND_PREFIX}wolf_start` 或 `{COMMAND_PREFIX}start` 開局（依目前模式）\n"
+                f"`{COMMAND_PREFIX}wolf_changeto2` 切換到誰是臥底模式\n"
+                f"`{COMMAND_PREFIX}wolf_changeto1` 切換回狼人殺模式\n"
+                f"`{COMMAND_PREFIX}wolf_join` / `{COMMAND_PREFIX}wolf_leave` 真人加入或離開（有上限）\n"
+                f"`{COMMAND_PREFIX}wolf_players` 查看真人名單\n"
+                f"`{COMMAND_PREFIX}wolf_vote 名字` 誰是臥底投票（真人玩家）\n"
+                f"`{COMMAND_PREFIX}wolf_stop` 臨時關閉目前遊戲\n"
                 f"`{COMMAND_PREFIX}wolf_status` 查看局面狀態\n"
                 f"`{COMMAND_PREFIX}wolf_help` 顯示說明"
             )
@@ -280,6 +408,35 @@ class WerewolfDiscordBot(commands.Bot):
             agents.append(agent)
         return agents
 
+    def build_undercover_agents(self) -> List[Agent]:
+        players: List[Agent] = []
+        for i, profile in enumerate(AI_PROFILES):
+            players.append(
+                Agent(
+                    idx=i,
+                    name=profile["name"],
+                    style=profile["style"],
+                    role="平民",
+                    avatar_url=profile["avatar_url"],
+                )
+            )
+        humans = list(self.humans.values())[: min(MAX_HUMAN_PLAYERS, len(players))]
+        for i, h in enumerate(humans):
+            players[i] = Agent(
+                idx=players[i].idx,
+                name=h.name,
+                style="真人玩家",
+                role="平民",
+                is_human=True,
+                user_id=h.user_id,
+            )
+        alive_names = [a.name for a in players]
+        self.undercover_name = random.choice(alive_names) if alive_names else ""
+        self.undercover_word_civil, self.undercover_word_under = random.choice(UNDERCOVER_WORD_PAIRS)
+        for a in players:
+            a.role = "臥底" if a.name == self.undercover_name else "平民"
+        return players
+
     def alive_agents(self) -> List[Agent]:
         return [a for a in self.agents if a.alive]
 
@@ -296,6 +453,17 @@ class WerewolfDiscordBot(commands.Bot):
             return "好人"
         if len(wolves) >= len(villagers):
             return "狼人"
+        return None
+
+    def undercover_winner(self) -> Optional[str]:
+        alive = self.alive_agents()
+        if not alive:
+            return "無"
+        alive_names = [a.name for a in alive]
+        if self.undercover_name not in alive_names:
+            return "平民"
+        if len(alive_names) <= 2:
+            return "臥底"
         return None
 
     def public_snapshot(self) -> str:
@@ -497,12 +665,111 @@ class WerewolfDiscordBot(commands.Bot):
             if out.role == "狼人":
                 a.suspicion[out.name] = 0.0
 
+    async def undercover_opening(self, channel: discord.TextChannel):
+        await self.send_system(channel, "🕵️ 誰是臥底開始。")
+        await self.send_system(channel, "玩家：" + "、".join(a.name for a in self.agents))
+        for a in self.alive_agents():
+            if not a.is_human:
+                continue
+            word = self.undercover_word_under if a.role == "臥底" else self.undercover_word_civil
+            try:
+                user = self.get_user(a.user_id) or await self.fetch_user(a.user_id)
+                await user.send(f"🔐 你的身份：{a.role}，你的詞：{word}")
+                await self.send_system(channel, f"✅ {a.name} 已收到私訊詞語。")
+            except Exception:
+                await self.send_system(channel, f"📩 {a.name} 無法收到私訊詞語，請先開啟與機器人的私訊。")
+
+    async def undercover_discussion_phase(self, channel: discord.TextChannel):
+        self.phase = "discussion"
+        await self.send_system(channel, f"🗣 第 {self.day} 輪討論開始（描述詞語，不要直接講出來）。")
+        ordered = self.alive_agents()[:]
+        random.shuffle(ordered)
+        for agent in ordered:
+            if agent.is_human:
+                continue
+            my_word = self.undercover_word_under if agent.role == "臥底" else self.undercover_word_civil
+            goal = (
+                f"你在玩誰是臥底。你的身份：{agent.role}，你的詞：{my_word}。"
+                "請發言 20 到 70 字，描述詞語特徵但不要直接講出詞。"
+            )
+            fallback = "我先說一個特徵：它很常見，但不同情境下感受不太一樣。"
+            speech = await self.think_speech(agent, self.public_snapshot(), goal, fallback)
+            await self.send_agent(channel, agent, speech)
+
+    async def undercover_voting_phase(self, channel: discord.TextChannel):
+        self.phase = "vote"
+        self.human_votes = {}
+        await self.send_system(channel, f"🗳 第 {self.day} 輪投票開始。")
+        votes: Dict[str, int] = {}
+        ordered = self.alive_agents()[:]
+        random.shuffle(ordered)
+        alive_names = [a.name for a in self.alive_agents()]
+        for agent in ordered:
+            if agent.is_human:
+                continue
+            candidates = [n for n in alive_names if n != agent.name]
+            fallback_target = random.choice(candidates)
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        f"你是{agent.name}，誰是臥底遊戲中你的身份是{agent.role}。\n"
+                        f"候選：{candidates}\n公開局勢：\n{self.public_snapshot()}\n"
+                        '請輸出 JSON：{"target":"名字","reason":"20字內理由"}'
+                    ),
+                },
+            ]
+            data = await self.json_response(messages, {"target": fallback_target, "reason": "我先投最可疑的。"})
+            target = str(data.get("target", fallback_target))
+            reason = str(data.get("reason", "我先投最可疑的。"))[:30]
+            if target not in candidates:
+                target = fallback_target
+            votes[target] = votes.get(target, 0) + 1
+            await self.send_agent(channel, agent, f"我投 {target}，{reason}")
+
+        alive_humans = [a for a in self.alive_agents() if a.is_human]
+        if alive_humans:
+            names = "、".join(alive_names)
+            await self.send_system(
+                channel,
+                f"🙋 真人玩家請用 `{COMMAND_PREFIX}wolf_vote 名字` 投票（{HUMAN_VOTE_TIMEOUT} 秒內）。可投：{names}",
+            )
+            for _ in range(HUMAN_VOTE_TIMEOUT):
+                if self.stop_requested:
+                    return
+                ready = all(h.user_id in self.human_votes for h in alive_humans)
+                if ready:
+                    break
+                await asyncio.sleep(1)
+            for h in alive_humans:
+                target = self.human_votes.get(h.user_id)
+                valid_targets = [n for n in alive_names if n != h.name]
+                if target in valid_targets:
+                    votes[target] = votes.get(target, 0) + 1
+                    await self.send_system(channel, f"🗳 {h.name} 投給了 {target}。")
+                else:
+                    await self.send_system(channel, f"⌛ {h.name} 未投有效票，視為棄權。")
+
+        if not votes:
+            await self.send_system(channel, "本輪無有效投票。")
+            return
+        top_count = max(votes.values())
+        finalists = [name for name, count in votes.items() if count == top_count]
+        out_name = random.choice(finalists)
+        out = next(a for a in self.agents if a.name == out_name)
+        out.alive = False
+        out.revealed_role = out.role
+        await self.send_system(channel, f"📢 票型結算，{out.name} 出局。")
+        await self.send_system(channel, f"🪦 {out.name} 的身份是{out.role}。")
+
     async def reveal_all(self, channel: discord.TextChannel):
         lines = [f"{a.name}：{a.role}" for a in self.agents]
         await self.send_system(channel, "📜 本局身份公布：\n" + "\n".join(lines))
 
     def save_game(self, status: str, winner: Optional[str] = None):
         payload = {
+            "mode": self.game_mode,
             "status": status,
             "winner": winner,
             "day": self.day,
@@ -511,22 +778,67 @@ class WerewolfDiscordBot(commands.Bot):
             "witch_poison_used": self.witch_poison_used,
             "seer_checks": self.seer_checks,
             "log": self.log,
+            "humans": [asdict(h) for h in self.humans.values()],
+            "undercover_word_civil": self.undercover_word_civil,
+            "undercover_word_under": self.undercover_word_under,
+            "undercover_name": self.undercover_name,
             "agents": [asdict(a) for a in self.agents],
         }
         save_state(payload)
 
+    async def _check_stop(self, channel: discord.TextChannel) -> bool:
+        if not self.stop_requested:
+            return False
+        self.phase = "stopped"
+        await self.send_system(channel, "🛑 本局已臨時關閉。")
+        self.save_game("stopped", "無")
+        return True
+
     async def run_game(self, channel: discord.TextChannel):
-        self.agents = self.build_agents()
+        if self.game_mode == "undercover":
+            self.agents = self.build_undercover_agents()
+        else:
+            self.agents = self.build_agents()
         self.day = 1
         self.phase = "init"
         self.log = []
         self.witch_heal_used = False
         self.witch_poison_used = False
         self.seer_checks = []
-        await self.send_system(channel, "🎭 真獨立 Agent 狼人殺開始。每個角色會用自己的記憶與身份發言。")
-        await self.send_system(channel, "玩家：" + "、".join(a.name for a in self.agents))
+        if self.game_mode == "undercover":
+            await self.undercover_opening(channel)
+        else:
+            await self.send_system(channel, "🎭 真獨立 Agent 狼人殺開始。每個角色會用自己的記憶與身份發言。")
+            await self.send_system(channel, "玩家：" + "、".join(a.name for a in self.agents))
         self.save_game("running")
+
+        if self.game_mode == "undercover":
+            while self.day <= MAX_DAYS:
+                if await self._check_stop(channel):
+                    return
+                await self.undercover_discussion_phase(channel)
+                self.save_game("running")
+                if await self._check_stop(channel):
+                    return
+                await self.undercover_voting_phase(channel)
+                if await self._check_stop(channel):
+                    return
+                self.save_game("running")
+                win = self.undercover_winner()
+                if win:
+                    await self.send_system(channel, f"🏁 遊戲結束，{win}陣營獲勝！")
+                    await self.reveal_all(channel)
+                    self.save_game("finished", win)
+                    return
+                self.day += 1
+            await self.send_system(channel, "⌛ 達到最大輪數，本局強制結束。")
+            await self.reveal_all(channel)
+            self.save_game("finished", "無")
+            return
+
         while self.day <= MAX_DAYS:
+            if await self._check_stop(channel):
+                return
             await self.night_phase(channel)
             self.save_game("running")
             win = self.winner()
@@ -535,8 +847,12 @@ class WerewolfDiscordBot(commands.Bot):
                 await self.reveal_all(channel)
                 self.save_game("finished", win)
                 return
+            if await self._check_stop(channel):
+                return
             await self.discussion_phase(channel)
             self.save_game("running")
+            if await self._check_stop(channel):
+                return
             await self.voting_phase(channel)
             self.save_game("running")
             win = self.winner()

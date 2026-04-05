@@ -45,8 +45,14 @@ python bot.py
 ## 5) 指令
 
 - `!wolf_help`：顯示說明
-- `!wolf_start`：開局（全 AI Agent + LLM）
+- `!wolf_start`：依目前模式開局
 - `!start`：`!wolf_start` 別名
+- `!wolf_changeto2`：切到「誰是臥底」
+- `!wolf_changeto1`：切回「狼人殺」
+- `!wolf_join` / `!wolf_leave`：真人玩家加入/離開（有上限）
+- `!wolf_players`：查看真人名單
+- `!wolf_vote 名字`：誰是臥底模式投票（真人玩家）
+- `!wolf_stop`：臨時關閉目前遊戲
 - `!wolf_status`：查看狀態
 
 ## 6) 主要環境變數
@@ -57,4 +63,6 @@ python bot.py
 - `TURN_SLEEP`：AI 發言間隔秒數
 - `OPENING_SLEEP`：系統訊息間隔秒數
 - `MAX_DAYS`：最大天數，超過後強制結束
+- `MAX_HUMAN_PLAYERS`：真人玩家可加入上限（預設 `2`）
+- `HUMAN_VOTE_TIMEOUT`：誰是臥底真人投票等待秒數（預設 `35`）
 - `DRY_RUN`：`1` 時只印出不送 Discord
