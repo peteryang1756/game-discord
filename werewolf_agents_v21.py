@@ -34,7 +34,17 @@ BOT_TOKENS = [
     os.environ.get('TG_BOT_6', ''),
 ]
 ROLES = ['狼人', '狼人', '預言家', '女巫', '村民', '村民']
-SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文狼人殺。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
+UNDERCOVER_WORD_PAIRS = [
+    ('奶茶', '珍珠奶茶'),
+    ('漢堡', '三明治'),
+    ('捷運', '火車'),
+    ('蘋果', '梨子'),
+    ('警察', '保全'),
+    ('咖啡', '可可'),
+    ('籃球', '排球'),
+    ('牙膏', '洗面乳'),
+]
+SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文派對遊戲。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
 
 
 @dataclass
@@ -122,6 +132,7 @@ class Game:
         self.llm = LLM()
         self.day = 1
         self.phase = 'idle'
+        self.game_mode = 'werewolf'
         self.turn_order: List[str] = []
         self.turn_index = 0
         self.log: List[str] = []
@@ -138,6 +149,9 @@ class Game:
         self.human_speech_deadline_ts: float = 0.0
         self.vote_prompted: bool = False
         self.vote_deadline_ts: float = 0.0
+        self.undercover_word_civil: str = ''
+        self.undercover_word_under: str = ''
+        self.undercover_name: str = ''
         self.humans: List[HumanPlayer] = []
         self.human = HumanPlayer()
         self.human_role: Optional[str] = None
@@ -196,10 +210,48 @@ class Game:
                 a.private_notes.append('你有解藥與毒藥，各一次。')
         return agents
 
+    def _reset_round_state(self):
+        self.turn_order = []
+        self.turn_index = 0
+        self.log = []
+        self.witch_heal_used = False
+        self.witch_poison_used = False
+        self.wolf_plan = []
+        self.pending_night_deaths = []
+        self.night_prompted_users = []
+        self.night_started_day = 0
+        self.night_deadline_ts = 0.0
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
+        self.vote_prompted = False
+        self.vote_deadline_ts = 0.0
+        self.undercover_word_civil = ''
+        self.undercover_word_under = ''
+        self.undercover_name = ''
+
+    def _apply_human_replacements(self):
+        live_agents = [a for a in self.agents if a.alive]
+        random.shuffle(live_agents)
+        roles_assigned = []
+        for h in self.humans:
+            if not h.joined:
+                continue
+            if not live_agents:
+                break
+            replaced = live_agents.pop()
+            h.replaced_bot = replaced.name
+            h.alive = True
+            h.role = replaced.role
+            replaced.alive = False
+            replaced.revealed_role = '替補離場'
+            roles_assigned.append(f'{h.name} 取代 {replaced.name}')
+        return roles_assigned
+
     def to_dict(self):
         return {
             'day': self.day,
             'phase': self.phase,
+            'game_mode': self.game_mode,
             'turn_order': self.turn_order,
             'turn_index': self.turn_index,
             'log': self.log,
@@ -216,6 +268,9 @@ class Game:
             'human_speech_deadline_ts': self.human_speech_deadline_ts,
             'vote_prompted': self.vote_prompted,
             'vote_deadline_ts': self.vote_deadline_ts,
+            'undercover_word_civil': self.undercover_word_civil,
+            'undercover_word_under': self.undercover_word_under,
+            'undercover_name': self.undercover_name,
             'human': asdict(self.human),
             'humans': [asdict(h) for h in self.humans],
             'human_role': self.human_role,
@@ -227,6 +282,7 @@ class Game:
         g = cls()
         g.day = data['day']
         g.phase = data['phase']
+        g.game_mode = data.get('game_mode', 'werewolf')
         g.turn_order = data.get('turn_order', [])
         g.turn_index = data.get('turn_index', 0)
         g.log = data.get('log', [])
@@ -243,6 +299,9 @@ class Game:
         g.human_speech_deadline_ts = data.get('human_speech_deadline_ts', 0.0)
         g.vote_prompted = data.get('vote_prompted', False)
         g.vote_deadline_ts = data.get('vote_deadline_ts', 0.0)
+        g.undercover_word_civil = data.get('undercover_word_civil', '')
+        g.undercover_word_under = data.get('undercover_word_under', '')
+        g.undercover_name = data.get('undercover_name', '')
         g.human = HumanPlayer(**data.get('human', {}))
         g.humans = [HumanPlayer(**h) for h in data.get('humans', ([] if not data.get('human', {}).get('joined') else [data.get('human')]))]
         g.human_role = data.get('human_role')
@@ -273,6 +332,13 @@ class Game:
         return next(a for a in self.agents if a.name == name)
 
     def winner(self):
+        if self.game_mode == 'undercover':
+            alive_names = self.active_players_names()
+            if self.undercover_name and self.undercover_name not in alive_names:
+                return '平民'
+            if len(alive_names) <= 2 and self.undercover_name in alive_names:
+                return '臥底'
+            return None
         wolves = len(self.wolves(True)) + len([h for h in self.alive_humans() if h.role == '狼人'])
         villagers = len([a for a in self.agents if a.alive and a.role != '狼人']) + len([h for h in self.alive_humans() if h.role != '狼人'])
         if wolves == 0:
@@ -395,31 +461,14 @@ class Game:
         print('llm_json failed', last_err)
         return None
 
-    def start_game(self):
+    def start_werewolf_game(self):
         self.phase = 'night'
-        self.night_started_day = 0
-        self.night_deadline_ts = 0.0
-        self.human_speech_wait_user_id = 0
-        self.human_speech_deadline_ts = 0.0
-        self.vote_prompted = False
-        self.vote_deadline_ts = 0.0
         self.auto_run = True
         self.last_auto_ts = time.time()
-        live_agents = [a for a in self.agents if a.alive]
-        random.shuffle(live_agents)
-        roles_assigned = []
-        for h in self.humans:
-            if not h.joined:
-                continue
-            if not live_agents:
-                break
-            replaced = live_agents.pop()
-            h.replaced_bot = replaced.name
-            h.alive = True
-            h.role = replaced.role
-            replaced.alive = False
-            replaced.revealed_role = '替補離場'
-            roles_assigned.append(f'{h.name} 取代 {replaced.name}')
+        self.agents = self._make_agents()
+        self._reset_round_state()
+        roles_assigned = self._apply_human_replacements()
+
         if self.humans:
             self.say_system('🎭 V2.3 狼人殺開始。真人玩家正式入局：' + '、'.join(roles_assigned))
             self.say_system('玩家：' + '、'.join(self.active_players_names()))
@@ -435,6 +484,58 @@ class Game:
         else:
             self.say_system('🎭 V2.3 狼人殺開始。')
             self.say_system('玩家：' + '、'.join(a.name for a in self.agents if a.alive))
+
+    def start_undercover_game(self):
+        self.phase = 'discussion'
+        self.auto_run = True
+        self.last_auto_ts = time.time()
+        self.day = 1
+        self.agents = self._make_agents()
+        self._reset_round_state()
+        roles_assigned = self._apply_human_replacements()
+        civil, under = random.choice(UNDERCOVER_WORD_PAIRS)
+        self.undercover_word_civil = civil
+        self.undercover_word_under = under
+
+        alive_names = self.active_players_names()
+        self.undercover_name = random.choice(alive_names) if alive_names else ''
+
+        for a in self.alive():
+            a.role = '臥底' if a.name == self.undercover_name else '平民'
+            if a.role == '臥底':
+                a.private_notes.append(f'你是臥底，你的詞是「{under}」。盡量裝成平民。')
+            else:
+                a.private_notes.append(f'你是平民，你的詞是「{civil}」。找出臥底。')
+
+        for h in self.alive_humans():
+            h.role = '臥底' if h.name == self.undercover_name else '平民'
+
+        if self.humans:
+            self.say_system('🕵️ 誰是臥底開始。真人玩家入局：' + '、'.join(roles_assigned))
+            self.say_system('玩家：' + '、'.join(self.active_players_names()))
+            for h in self.humans:
+                if h.joined and h.alive:
+                    word = under if h.role == '臥底' else civil
+                    ok = self.send_private(h.user_id, f'🔐 你的身份：{h.role}，你的詞：{word}')
+                    h.dm_ready = bool(ok)
+                    if not ok:
+                        self.say_system(f'📩 {h.name} 無法收到私訊詞語，請先私訊機器人 /start。')
+                    else:
+                        self.say_system(f'✅ {h.name} 已收到私訊詞語。')
+            self.say_system('規則：每輪發言描述你的詞但不要直接講出來；之後投票 /vote 名字；可用 /quit 退出本局')
+        else:
+            self.say_system('🕵️ 誰是臥底開始。')
+            self.say_system('玩家：' + '、'.join(a.name for a in self.agents if a.alive))
+
+        self.turn_order = [a.name for a in self.alive()] + [h.name for h in self.alive_humans()]
+        random.shuffle(self.turn_order)
+        self.turn_index = 0
+
+    def start_game(self):
+        if self.game_mode == 'undercover':
+            self.start_undercover_game()
+        else:
+            self.start_werewolf_game()
         self.save()
 
     def plan_wolves(self):
@@ -658,10 +759,126 @@ class Game:
         self.phase = 'discussion'
 
     def maybe_claim_role(self, agent: Agent) -> bool:
+        if self.game_mode != 'werewolf':
+            return False
         if agent.role == '預言家':
             wolf_hits = [n for n, v in agent.suspicion.items() if v >= 0.95 and self.get(n).alive]
             return bool(wolf_hits) and (self.day >= 2 or len(self.alive()) <= 4)
         return False
+
+    def undercover_discussion_turn(self):
+        if self.turn_index == 0:
+            self.say_system(f'🕵️ 第 {self.day} 輪發言開始。請描述你的詞，但不要直接講詞。')
+        if self.turn_index >= len(self.turn_order):
+            self.turn_index = 0
+            self.human_speech_wait_user_id = 0
+            self.human_speech_deadline_ts = 0.0
+            self.phase = 'vote'
+            return
+
+        current_name = self.turn_order[self.turn_index]
+        human_current = next((h for h in self.alive_humans() if h.name == current_name), None)
+        if human_current:
+            if self.human_speech_wait_user_id != human_current.user_id:
+                self.human_speech_wait_user_id = human_current.user_id
+                self.human_speech_deadline_ts = time.time() + 60
+                self.say_system(f'🎙 輪到真人玩家 {human_current.name} 描述，60秒內發言。')
+            return
+
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
+        agent = self.get(current_name)
+        if not agent.alive:
+            self.turn_index += 1
+            return
+
+        my_word = self.undercover_word_under if agent.role == '臥底' else self.undercover_word_civil
+        prompt = f'''你是{agent.name}，在玩誰是臥底。你的身份：{agent.role}，你的詞：{my_word}。
+公開局勢：
+{self.snapshot_public()}
+請輸出40到110字發言，描述你的詞特徵但不要直接講詞，語氣像台灣玩家，並可點名一位你懷疑的人。'''
+        text = self.llm_text(prompt)
+        if text:
+            self.say(agent, text)
+        self.turn_index += 1
+
+    def undercover_voting_step(self):
+        self.say_system(f'🗳 第 {self.day} 輪投票開始。')
+        votes: Dict[str, int] = {}
+        alive_humans = self.alive_humans()
+
+        if alive_humans and not self.vote_prompted:
+            self.say_system('🙋 真人玩家請用 /vote 名字 投票（60秒，逾時視為棄權）。')
+            self.vote_prompted = True
+            self.vote_deadline_ts = time.time() + 60
+            return
+
+        if alive_humans and self.vote_prompted:
+            all_ready = all(h.pending_action and h.pending_action.get('type') in ('vote', 'pass') for h in alive_humans)
+            if not all_ready and time.time() < self.vote_deadline_ts:
+                return
+
+        alive_names = self.active_players_names()
+        for agent in self.alive():
+            candidates = [n for n in alive_names if n != agent.name]
+            prompt = f'''你是{agent.name}，身份：{agent.role}。公開局勢：
+{self.snapshot_public()}
+候選人：{candidates}
+只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
+            data = self.llm_json(prompt)
+            if not data:
+                continue
+            target = data.get('target')
+            if target not in candidates:
+                continue
+            reason = str(data.get('reason', ''))[:30]
+            self.say(agent, f'我投 {target}，{reason}' if reason else f'我投 {target}')
+            votes[target] = votes.get(target, 0) + 1
+
+        valid_human_targets = self.active_players_names()
+        for h in alive_humans:
+            act = h.pending_action or {}
+            if act.get('type') == 'vote':
+                target = act.get('target')
+                valid = [n for n in valid_human_targets if n != h.name]
+                if target in valid:
+                    votes[target] = votes.get(target, 0) + 1
+                    self.say_system(f'🗳 {h.name} 投給了 {target}。')
+                else:
+                    self.say_system(f'⚠️ {h.name} 投票目標無效，視為棄權。')
+            else:
+                self.say_system(f'⌛ {h.name} 投票逾時，視為棄權。')
+            h.pending_action = None
+
+        self.vote_prompted = False
+        self.vote_deadline_ts = 0.0
+
+        if not votes:
+            self.day += 1
+            self.phase = 'discussion'
+            self.turn_order = self.active_players_names()
+            random.shuffle(self.turn_order)
+            return
+
+        top = max(votes.values())
+        out_name = random.choice([n for n, c in votes.items() if c == top])
+        out_human = next((h for h in self.alive_humans() if h.name == out_name), None)
+        if out_human:
+            out_human.alive = False
+            self.say_system(f'📢 票型結算，{out_human.name} 被淘汰。')
+        else:
+            out = self.get(out_name)
+            out.alive = False
+            out.revealed_role = out.role
+            self.say_system(f'📢 票型結算，{out.name} 被淘汰。')
+
+        if self.winner():
+            self.phase = 'ended'
+        else:
+            self.day += 1
+            self.phase = 'discussion'
+            self.turn_order = self.active_players_names()
+            random.shuffle(self.turn_order)
 
     def discussion_turn(self):
         if self.turn_index == 0:
@@ -835,7 +1052,7 @@ class Game:
         changed = False
         now = time.time()
 
-        if self.phase == 'night' and self.night_deadline_ts > 0 and now >= self.night_deadline_ts:
+        if self.game_mode == 'werewolf' and self.phase == 'night' and self.night_deadline_ts > 0 and now >= self.night_deadline_ts:
             for h, _ in self.need_human_night_action():
                 if not h.dm_ready:
                     self.say_system(f'📩 {h.name} 未完成私訊連線，本夜視為棄權。')
@@ -870,11 +1087,31 @@ class Game:
 
 
     def reveal_all(self):
+        if self.game_mode == 'undercover':
+            self.say_system(
+                '📜 本局結果公布：\n'
+                + f'臥底：{self.undercover_name}\n'
+                + f'平民詞：{self.undercover_word_civil}\n'
+                + f'臥底詞：{self.undercover_word_under}'
+            )
+            return
         self.say_system('📜 本局身份公布：\n' + '\n'.join(f'{a.name}：{a.role}' for a in self.agents))
 
     def advance(self):
         if self.phase == 'idle':
             self.start_game()
+            return
+        if self.game_mode == 'undercover':
+            if self.phase == 'discussion':
+                self.undercover_discussion_turn()
+            elif self.phase == 'vote':
+                self.undercover_voting_step()
+            elif self.phase == 'ended':
+                win = self.winner() or '未知'
+                self.say_system(f'🏁 遊戲結束，{win}陣營獲勝！')
+                self.reveal_all()
+                self.phase = 'done'
+            self.save()
             return
         if self.phase == 'night':
             self.advance_night()
@@ -899,7 +1136,7 @@ class Game:
                 dead_parts.append(f'{h.name}({h.role})')
         dead = '、'.join(dead_parts) or '無'
         current_human = self.current_human_speaker()
-        return f'目前第 {self.day} 天，階段：{self.phase}\n自動模式：{"開" if self.auto_run else "關"}\n存活：{alive}\n出局：{dead}\n下一手：{self.turn_order[self.turn_index] if self.phase=="discussion" and self.turn_index < len(self.turn_order) else "-"}\n真人發言權：{current_human.name if current_human else "無"}'
+        return f'模式：{self.game_mode}\n目前第 {self.day} 天，階段：{self.phase}\n自動模式：{"開" if self.auto_run else "關"}\n存活：{alive}\n出局：{dead}\n下一手：{self.turn_order[self.turn_index] if self.phase=="discussion" and self.turn_index < len(self.turn_order) else "-"}\n真人發言權：{current_human.name if current_human else "無"}'
 
 
 def ensure_env():
@@ -962,6 +1199,31 @@ def run_controller():
                         game.say_system(f'📩 {existing.name} 請先私訊機器人 /start，否則收不到身份與夜晚提示。')
                     game.save()
                     handled_message = True
+                elif text.startswith('/switchgame'):
+                    if not is_group:
+                        continue
+                    parts = text.split(maxsplit=1)
+                    if len(parts) < 2:
+                        game.say_system('⚙️ 用法：/switchgame werewolf 或 /switchgame undercover')
+                    else:
+                        mode = parts[1].strip().lower()
+                        if mode in ('werewolf', 'wolf', '狼人殺'):
+                            game.game_mode = 'werewolf'
+                            game.phase = 'idle'
+                            game.day = 1
+                            game.auto_run = False
+                            game.say_system('✅ 已切換到 狼人殺。請用 /start_game 開局。')
+                            game.save()
+                        elif mode in ('undercover', 'whoisundercover', '誰是臥底', '臥底'):
+                            game.game_mode = 'undercover'
+                            game.phase = 'idle'
+                            game.day = 1
+                            game.auto_run = False
+                            game.say_system('✅ 已切換到 誰是臥底。請用 /start_game 開局。')
+                            game.save()
+                        else:
+                            game.say_system('⚠️ 未知模式，請用 werewolf 或 undercover。')
+                    handled_message = True
                 elif text.startswith('/start_game') or text.startswith('/start') or text.startswith('/new'):
                     if is_private:
                         if known_human:
@@ -974,6 +1236,7 @@ def run_controller():
                         continue
                     old = game
                     game = Game()
+                    game.game_mode = old.game_mode
                     game.humans = old.humans
                     game.start_game()
                     game.save()
@@ -1183,7 +1446,10 @@ def run_controller():
                     elif game.phase == 'discussion':
                         game.say_system(f'⛔ {human.name}，現在不是你的發言時間。')
                     elif game.phase == 'night':
-                        game.say_system(f'🤫 {human.name}，現在是夜晚，請只使用夜間指令。')
+                        if game.game_mode == 'werewolf':
+                            game.say_system(f'🤫 {human.name}，現在是夜晚，請只使用夜間指令。')
+                        else:
+                            game.say_system(f'⛔ {human.name}，現在不是你的發言時間。')
                     elif game.phase == 'vote':
                         game.say_system(f'🗳 {human.name}，現在是投票階段，請用 /vote 名字。')
                     handled_message = True
