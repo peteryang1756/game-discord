@@ -29,6 +29,7 @@ TURN_SLEEP = float(os.getenv("TURN_SLEEP", "1.8"))
 OPENING_SLEEP = float(os.getenv("OPENING_SLEEP", "1.2"))
 MAX_DAYS = int(os.getenv("MAX_DAYS", "6"))
 DRY_RUN = os.getenv("DRY_RUN", "0") == "1"
+SUSPICION_KEYWORDS = ("怪", "狼", "不對", "做身份", "帶節奏")
 
 AI_PROFILES = [
     {
@@ -250,7 +251,7 @@ class WerewolfDiscordBot(commands.Bot):
             if other.name == agent.name:
                 continue
             other.public_memory.append(f"{agent.name} 說：{text}")
-            if agent.name in other.suspicion and any(k in text for k in ["怪", "狼", "不對", "做身份", "帶節奏"]):
+            if agent.name in other.suspicion and any(k in text for k in SUSPICION_KEYWORDS):
                 other.suspicion[agent.name] = round(min(0.99, other.suspicion[agent.name] + 0.03), 2)
 
     def build_agents(self) -> List[Agent]:
@@ -272,7 +273,7 @@ class WerewolfDiscordBot(commands.Bot):
                     AI_PROFILES[j]["name"] for j in range(i + 1, len(roles)) if roles[j] == "狼人"
                 ]
                 if mates:
-                    agent.private_notes.append(f"你的狼人隊友是：{mates[0]}")
+                    agent.private_notes.append(f"你的狼人隊友是：{', '.join(mates)}")
             if agent.role == "女巫":
                 agent.private_notes.append("你有一瓶解藥與一瓶毒藥，各只能用一次。")
             if agent.role == "預言家":
