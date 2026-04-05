@@ -1,14 +1,14 @@
-# Discord 狼人殺 Bot（1 主 bot + 多 webhook 角色）
+# Discord 狼人殺 Bot（Telegram Agent/LLM 同步版）
 
-玩法與原本版本相同，但改為 Discord，並支援真人補位：
-- 一個主 bot 控流程與系統訊息
-- AI 角色用 webhook 身份發言（看起來像多帳號）
-- 朋友可用 `!wolf_join` 加入，取代部分 AI
+此版本將 `discord_werewolf` 對齊 telegram 的 Agent + LLM 玩法：
+- 6 個固定 AI 角色（各自人格、記憶、懷疑度）
+- 夜晚 / 討論 / 投票流程與 `werewolf_agents_v21.py` 一致
+- AI 發言與投票由 LLM 驅動，並用 webhook 顯示為多角色發言
 
 ## 1) 安裝
 
 ```bash
-cd /home/exedev/werewolf-tg/discord_werewolf
+cd /home/runner/work/game-discord/game-discord/discord_werewolf
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -24,6 +24,7 @@ cp .env.example .env
 至少要填：
 - `DISCORD_BOT_TOKEN`
 - `DISCORD_CHANNEL_ID`
+- `LLM_API_KEY`
 
 ## 3) Discord Bot 權限
 
@@ -44,9 +45,16 @@ python bot.py
 ## 5) 指令
 
 - `!wolf_help`：顯示說明
-- `!wolf_join`：加入下一局（真人）
-- `!wolf_leave`：離開大廳
-- `!wolf_lobby`：看目前真人名單
-- `!wolf_start`：開局（不足 6 人自動補 AI）
-- `!vote 玩家名稱`：白天投票
+- `!wolf_start`：開局（全 AI Agent + LLM）
+- `!start`：`!wolf_start` 別名
 - `!wolf_status`：查看狀態
+
+## 6) 主要環境變數
+
+- `LLM_API_BASE`：LLM API Base URL（預設 `https://elysiver.h-e.top/v1`）
+- `LLM_API_KEY`：LLM API 金鑰
+- `LLM_MODEL`：模型名稱（預設 `gpt-5.4`）
+- `TURN_SLEEP`：AI 發言間隔秒數
+- `OPENING_SLEEP`：系統訊息間隔秒數
+- `MAX_DAYS`：最大天數，超過後強制結束
+- `DRY_RUN`：`1` 時只印出不送 Discord
