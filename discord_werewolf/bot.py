@@ -146,6 +146,8 @@ def vote_line(target: Player) -> str:
 
 
 def death_line(player: Player) -> str:
+    if player.role == "獵人":
+        return f"{player.name} 倒下，身份是獵人。"
     return f"{player.name} 出局，身份是{player.role}。"
 
 
@@ -292,13 +294,16 @@ class WerewolfDiscordBot(commands.Bot):
     async def send_system(self, channel: discord.abc.Messageable, text: str):
         print(f"[SYSTEM] {text}")
         await channel.send(text)
-        await asyncio.sleep(0.9)
+        await asyncio.sleep(1.2)
 
-    async def send_as_ai(self, channel: discord.TextChannel, player: Player, text: str):
-        hook = await self._get_webhook(channel)
+    async def send_as(self, channel: discord.TextChannel, player: Player, text: str):
         print(f"[{player.name}] {text}")
-        await hook.send(text, username=player.name, avatar_url=player.avatar_url or None)
-        await asyncio.sleep(1.1)
+        if player.is_human:
+            await channel.send(f"**{player.name}**：{text}")
+        else:
+            hook = await self._get_webhook(channel)
+            await hook.send(text, username=player.name, avatar_url=player.avatar_url or None)
+        await asyncio.sleep(1.6)
 
     async def prompt_human_speak(self, channel: discord.TextChannel, player: Player):
         if not player.user_id:
@@ -309,7 +314,8 @@ class WerewolfDiscordBot(commands.Bot):
             return m.channel.id == channel.id and m.author.id == player.user_id and len(m.content.strip()) > 0
 
         try:
-            await self.wait_for("message", check=check, timeout=20)
+            msg = await self.wait_for("message", check=check, timeout=20)
+            await self.send_as(channel, player, msg.content.strip())
         except asyncio.TimeoutError:
             await self.send_system(channel, f"⏱️ {player.name} 超時，跳過。")
 
@@ -407,25 +413,20 @@ class WerewolfDiscordBot(commands.Bot):
             if p.is_human:
                 await self.prompt_human_speak(channel, p)
             else:
-                await self.send_as_ai(channel, p, intro_line(p))
+                await self.send_as(channel, p, intro_line(p))
 
         for p in alive:
             choices = [x for x in alive if x.idx != p.idx and x.alive]
             if not choices:
                 continue
             target = random.choice(choices)
-            if p.is_human:
-                await self.send_system(channel, f"👉 {p.name} 若想補充可繼續發言。")
-            else:
-                await self.send_as_ai(channel, p, accusation_line(target))
+            await self.send_as(channel, p, accusation_line(target))
 
-        if alive:
-            target = random.choice(alive)
-            if target.is_human:
-                await self.send_system(channel, f"🛡️ {target.name} 想自辯可直接發言。")
-                await asyncio.sleep(2)
-            else:
-                await self.send_as_ai(channel, target, defense_line())
+        target = random.choice(alive)
+        if target.is_human:
+            await self.prompt_human_speak(channel, target)
+        else:
+            await self.send_as(channel, target, defense_line())
 
     async def voting_phase(self, channel: discord.TextChannel, players: List[Player], day: int):
         await self.send_system(channel, f"🗳 第 {day} 天投票開始。真人請用 `!vote 名字`，限時 45 秒。")
@@ -440,7 +441,7 @@ class WerewolfDiscordBot(commands.Bot):
             choices = [x for x in alive if x.idx != p.idx]
             target = random.choice(choices)
             self.current_votes[p.idx] = target.idx
-            await self.send_as_ai(channel, p, vote_line(target))
+            await self.send_as(channel, p, vote_line(target))
 
         end_at = asyncio.get_event_loop().time() + 45
         while asyncio.get_event_loop().time() < end_at:
@@ -466,12 +467,6 @@ class WerewolfDiscordBot(commands.Bot):
         out = next(p for p in players if p.idx == out_idx)
         out.alive = False
 
-        result_lines = []
-        for target_idx, count in sorted(tally.items(), key=lambda x: x[1], reverse=True):
-            name = next(p.name for p in players if p.idx == target_idx)
-            result_lines.append(f"{name}: {count}")
-
-        await self.send_system(channel, "📊 票型：\n" + "\n".join(result_lines))
         await self.send_system(channel, f"📢 票型結算，{out.name} 被放逐。")
         await self.send_system(channel, death_line(out))
 
@@ -483,11 +478,7 @@ class WerewolfDiscordBot(commands.Bot):
         self.players = self.build_players()
         players = self.players
 
-        humans = [p.name for p in players if p.is_human]
-        ai_count = len([p for p in players if not p.is_human])
-
-        await self.send_system(channel, "🎭 狼人殺 6 人局開始。")
-        await self.send_system(channel, f"真人：{', '.join(humans) if humans else '0 人'}；AI 補位：{ai_count} 人")
+        await self.send_system(channel, "🎭 狼人殺 6 人局開始。角色已分配。")
         await self.send_system(channel, "玩家：" + "、".join(p.name for p in players))
 
         save_state({"players": serialize_players(players), "day": 1, "status": "running"})
