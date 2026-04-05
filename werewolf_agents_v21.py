@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 API_BASE = os.environ.get('LLM_API_BASE', 'https://free.9e.nz/v1')
 API_KEY = os.environ.get('LLM_API_KEY', '')
 MODEL = os.environ.get('LLM_MODEL', 'gpt-5.4')
-CHAT_ID = int(os.environ.get('TG_CHAT_ID', '-5103856268'))
+CHAT_ID = int(os.environ.get('TG_CHAT_ID', '-1003644055956'))
 STATE_FILE = os.environ.get('STATE_FILE', 'game_state_v21.json')
 TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.5'))
 SYSTEM_SLEEP = float(os.environ.get('SYSTEM_SLEEP', '1.0'))
