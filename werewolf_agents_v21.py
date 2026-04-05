@@ -7,7 +7,7 @@ import urllib.request
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional, Tuple
 
-API_BASE = os.environ.get('LLM_API_BASE', 'https://elysiver.h-e.top/v1')
+API_BASE = os.environ.get('LLM_API_BASE', 'https://free.9e.nz/v1')
 API_KEY = os.environ.get('LLM_API_KEY', '')
 MODEL = os.environ.get('LLM_MODEL', 'gpt-5.4')
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '-5103856268'))
