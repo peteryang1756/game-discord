@@ -1,6 +1,9 @@
-# Discord 狼人殺 Bot（6 人自動對局）
+# Discord 狼人殺 Bot（1 主 bot + 多 webhook 角色）
 
-跟 `werewolf_telegram.py` 同樣玩法，但改成發在 Discord 頻道。
+玩法與原本版本相同，但改為 Discord，並支援真人補位：
+- 一個主 bot 控流程與系統訊息
+- AI 角色用 webhook 身份發言（看起來像多帳號）
+- 朋友可用 `!wolf_join` 加入，取代部分 AI
 
 ## 1) 安裝
 
@@ -26,7 +29,11 @@ cp .env.example .env
 
 在 Discord Developer Portal：
 - 打開 **MESSAGE CONTENT INTENT**
-- 邀請 bot 進伺服器並給該頻道發言權限
+
+機器人在伺服器至少要有：
+- Send Messages
+- Read Message History
+- Manage Webhooks（重要，AI 角色要用）
 
 ## 4) 啟動
 
@@ -34,7 +41,12 @@ cp .env.example .env
 python bot.py
 ```
 
-上線後在指定頻道輸入：
-- `!wolf_help`
-- `!wolf_start`
-- `!wolf_status`
+## 5) 指令
+
+- `!wolf_help`：顯示說明
+- `!wolf_join`：加入下一局（真人）
+- `!wolf_leave`：離開大廳
+- `!wolf_lobby`：看目前真人名單
+- `!wolf_start`：開局（不足 6 人自動補 AI）
+- `!vote 玩家名稱`：白天投票
+- `!wolf_status`：查看狀態
