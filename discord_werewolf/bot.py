@@ -35,6 +35,7 @@ MAX_PLAYER_NAME_LENGTH = 18
 COLLISION_NAME_TRUNCATE = 12
 UNDERCOVER_SPEECH_RANGE_TEXT = "20 到 70"
 MAX_UNDERCOVER_REASON_LENGTH = 30
+COLLISION_SUFFIX_LENGTH = 5
 
 AI_PROFILES = [
     {
@@ -195,6 +196,11 @@ class WerewolfDiscordBot(commands.Bot):
         self.undercover_word_under = ""
         self.undercover_name = ""
 
+    def reset_undercover_state(self):
+        self.undercover_word_civil = ""
+        self.undercover_word_under = ""
+        self.undercover_name = ""
+
     async def setup_hook(self):
         @self.command(name="wolf_start")
         async def wolf_start(ctx: commands.Context):
@@ -225,7 +231,7 @@ class WerewolfDiscordBot(commands.Bot):
             await ctx.send(
                 " / ".join(
                     [
-                        f"mode: {state.get('mode', self.game_mode)}",
+                        f"mode: {state.get('mode', '-')}",
                         f"status: {state.get('status', '-')}",
                         f"day: {state.get('day', '-')}",
                         f"phase: {state.get('phase', '-')}",
@@ -267,13 +273,13 @@ class WerewolfDiscordBot(commands.Bot):
             if len(self.humans) >= MAX_HUMAN_PLAYERS:
                 await ctx.send(f"⚠️ 真人玩家上限為 {MAX_HUMAN_PLAYERS}。")
                 return
-            base_name = (
-                getattr(ctx.author, "display_name", "") or ctx.author.name or "玩家"
-            ).strip()[:MAX_PLAYER_NAME_LENGTH]
+            raw_name = (getattr(ctx.author, "display_name", "") or ctx.author.name or "玩家").strip()
+            base_name = raw_name[:MAX_PLAYER_NAME_LENGTH]
             taken = {x["name"] for x in AI_PROFILES} | {h.name for h in self.humans.values()}
             name = base_name or "玩家"
             if name in taken:
-                name = f"{name[:COLLISION_NAME_TRUNCATE]}-{str(ctx.author.id)[-4:]}"
+                max_prefix = min(COLLISION_NAME_TRUNCATE, MAX_PLAYER_NAME_LENGTH - COLLISION_SUFFIX_LENGTH)
+                name = f"{name[:max_prefix]}-{str(ctx.author.id)[-4:]}"
             self.humans[ctx.author.id] = HumanPlayer(user_id=ctx.author.id, name=name)
             await ctx.send(f"🙋 真人玩家 {name} 已加入（{len(self.humans)}/{MAX_HUMAN_PLAYERS}）。")
 
@@ -415,6 +421,7 @@ class WerewolfDiscordBot(commands.Bot):
         return agents
 
     def build_undercover_agents(self) -> List[Agent]:
+        self.reset_undercover_state()
         players: List[Agent] = []
         for i, profile in enumerate(AI_PROFILES):
             players.append(
@@ -426,7 +433,7 @@ class WerewolfDiscordBot(commands.Bot):
                     avatar_url=profile["avatar_url"],
                 )
             )
-        humans = list(self.humans.values())[:MAX_HUMAN_PLAYERS]
+        humans = list(self.humans.values())[: min(MAX_HUMAN_PLAYERS, len(self.humans), len(players))]
         for i, h in enumerate(humans):
             players[i] = Agent(
                 idx=players[i].idx,
@@ -683,7 +690,7 @@ class WerewolfDiscordBot(commands.Bot):
                 await user.send(f"🔐 你的身份：{a.role}，你的詞：{word}")
                 await self.send_system(channel, f"✅ {a.name} 已收到私訊詞語。")
             except Exception:
-                await self.send_system(channel, f"📩 {a.name} 無法收到私訊詞語，請先開啟與機器人的私訊。")
+                await self.send_system(channel, f"📩 無法傳送私訊給 {a.name}。")
 
     async def undercover_discussion_phase(self, channel: discord.TextChannel):
         self.phase = "discussion"
@@ -736,6 +743,7 @@ class WerewolfDiscordBot(commands.Bot):
 
         alive_humans = [a for a in self.alive_agents() if a.is_human]
         if alive_humans:
+            alive_human_ids = {h.user_id for h in alive_humans}
             names = "、".join(alive_names)
             await self.send_system(
                 channel,
@@ -744,14 +752,14 @@ class WerewolfDiscordBot(commands.Bot):
             for _ in range(HUMAN_VOTE_TIMEOUT):
                 if self.stop_requested:
                     return
-                ready = all(h.user_id in self.human_votes for h in alive_humans)
-                if ready:
+                all_humans_voted = alive_human_ids.issubset(self.human_votes.keys())
+                if all_humans_voted:
                     break
                 await asyncio.sleep(1)
+            alive_name_set = set(alive_names)
             for h in alive_humans:
                 target = self.human_votes.get(h.user_id)
-                valid_targets = [n for n in alive_names if n != h.name]
-                if target in valid_targets:
+                if target in alive_name_set and target != h.name:
                     votes[target] = votes.get(target, 0) + 1
                     await self.send_system(channel, f"🗳 {h.name} 投給了 {target}。")
                 else:
@@ -763,7 +771,10 @@ class WerewolfDiscordBot(commands.Bot):
         top_count = max(votes.values())
         finalists = [name for name, count in votes.items() if count == top_count]
         out_name = random.choice(finalists)
-        out = next(a for a in self.agents if a.name == out_name)
+        out = next((a for a in self.agents if a.name == out_name), None)
+        if not out:
+            await self.send_system(channel, "⚠️ 投票結算異常，本輪跳過。")
+            return
         out.alive = False
         out.revealed_role = out.role
         await self.send_system(channel, f"📢 票型結算，{out.name} 出局。")
@@ -804,6 +815,7 @@ class WerewolfDiscordBot(commands.Bot):
         if self.game_mode == "undercover":
             self.agents = self.build_undercover_agents()
         else:
+            self.reset_undercover_state()
             self.agents = self.build_agents()
         self.day = 1
         self.phase = "init"
