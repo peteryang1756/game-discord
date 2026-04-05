@@ -131,6 +131,12 @@ class Game:
         self.auto_run = False
         self.last_auto_ts = 0.0
         self.night_prompted_users: List[int] = []
+        self.night_started_day: int = 0
+        self.night_deadline_ts: float = 0.0
+        self.human_speech_wait_user_id: int = 0
+        self.human_speech_deadline_ts: float = 0.0
+        self.vote_prompted: bool = False
+        self.vote_deadline_ts: float = 0.0
         self.humans: List[HumanPlayer] = []
         self.human = HumanPlayer()
         self.human_role: Optional[str] = None
@@ -203,6 +209,12 @@ class Game:
             'auto_run': self.auto_run,
             'last_auto_ts': self.last_auto_ts,
             'night_prompted_users': self.night_prompted_users,
+            'night_started_day': self.night_started_day,
+            'night_deadline_ts': self.night_deadline_ts,
+            'human_speech_wait_user_id': self.human_speech_wait_user_id,
+            'human_speech_deadline_ts': self.human_speech_deadline_ts,
+            'vote_prompted': self.vote_prompted,
+            'vote_deadline_ts': self.vote_deadline_ts,
             'human': asdict(self.human),
             'humans': [asdict(h) for h in self.humans],
             'human_role': self.human_role,
@@ -224,6 +236,12 @@ class Game:
         g.auto_run = data.get('auto_run', False)
         g.last_auto_ts = data.get('last_auto_ts', 0.0)
         g.night_prompted_users = data.get('night_prompted_users', [])
+        g.night_started_day = data.get('night_started_day', 0)
+        g.night_deadline_ts = data.get('night_deadline_ts', 0.0)
+        g.human_speech_wait_user_id = data.get('human_speech_wait_user_id', 0)
+        g.human_speech_deadline_ts = data.get('human_speech_deadline_ts', 0.0)
+        g.vote_prompted = data.get('vote_prompted', False)
+        g.vote_deadline_ts = data.get('vote_deadline_ts', 0.0)
         g.human = HumanPlayer(**data.get('human', {}))
         g.humans = [HumanPlayer(**h) for h in data.get('humans', ([] if not data.get('human', {}).get('joined') else [data.get('human')]))]
         g.human_role = data.get('human_role')
@@ -254,8 +272,8 @@ class Game:
         return next(a for a in self.agents if a.name == name)
 
     def winner(self):
-        wolves = len(self.wolves(True)) + (1 if self.human.joined and self.human.alive and self.human.role == '狼人' else 0)
-        villagers = len([a for a in self.agents if a.alive and a.role != '狼人']) + (1 if self.human.joined and self.human.alive and self.human.role != '狼人' else 0)
+        wolves = len(self.wolves(True)) + len([h for h in self.alive_humans() if h.role == '狼人'])
+        villagers = len([a for a in self.agents if a.alive and a.role != '狼人']) + len([h for h in self.alive_humans() if h.role != '狼人'])
         if wolves == 0:
             return '好人'
         if wolves >= villagers:
@@ -264,6 +282,13 @@ class Game:
 
     def send(self, token: str, text: str):
         TG(token).call('sendMessage', {'chat_id': CHAT_ID, 'text': text})
+
+    def send_private(self, user_id: int, text: str):
+        try:
+            TG(BOT_TOKENS[0]).call('sendMessage', {'chat_id': user_id, 'text': text})
+            return True
+        except Exception:
+            return False
 
     def say_system(self, text: str):
         print('[SYSTEM]', text)
@@ -309,8 +334,6 @@ class Game:
     def snapshot_public(self):
         alive = '、'.join(self.active_players_names())
         dead_parts = [f'{a.name}({a.revealed_role or "未知"})' for a in self.agents if not a.alive]
-        if self.human.joined and not self.human.alive and self.human.role:
-            dead_parts.append(f'{self.human.name}({self.human.role})')
         dead = '、'.join(dead_parts) or '無'
         recent = '\n'.join(self.log[-12:]) or '無'
         return f'第{self.day}天，階段：{self.phase}\n存活：{alive}\n出局：{dead}\n最近訊息：\n{recent}'
@@ -367,6 +390,12 @@ class Game:
 
     def start_game(self):
         self.phase = 'night'
+        self.night_started_day = 0
+        self.night_deadline_ts = 0.0
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
+        self.vote_prompted = False
+        self.vote_deadline_ts = 0.0
         self.auto_run = True
         self.last_auto_ts = time.time()
         live_agents = [a for a in self.agents if a.alive]
@@ -389,8 +418,10 @@ class Game:
             self.say_system('玩家：' + '、'.join(self.active_players_names()))
             for h in self.humans:
                 if h.joined and h.role:
-                    self.say_system(f'🔐 {h.name}，你的身份是：{h.role}。')
-            self.say_system('規則：非你的發言時間請不要說話；投票用 /vote 名字；夜晚技能用 /kill /check /save /poison /pass')
+                    ok = self.send_private(h.user_id, f'🔐 你的身份是：{h.role}')
+                    if not ok:
+                        self.say_system(f'📩 {h.name} 請先私訊機器人一次，才能收到身份與夜晚提示。')
+            self.say_system('規則：白天按輪次發言；投票用 /vote 名字；夜晚技能請私訊機器人使用 /kill /check /save /poison /pass')
         else:
             self.say_system('🎭 V2.3 狼人殺開始。')
             self.say_system('玩家：' + '、'.join(a.name for a in self.agents if a.alive))
@@ -461,6 +492,17 @@ class Game:
             witch.private_notes.append(f'你昨晚毒了 {poisoned.name}。')
         return saved, poisoned
 
+    def _alive_names_for_human(self):
+        return self.active_players_names()
+
+    def _night_waiting_tip(self, mode: str):
+        alive_names = '、'.join(self._alive_names_for_human())
+        if mode == 'witch':
+            return f'目前存活：{alive_names}\n指令：/save、/poison 名字、/pass'
+        if mode == 'seer':
+            return f'目前存活：{alive_names}\n指令：/check 名字'
+        return f'目前存活：{alive_names}\n指令：/kill 名字'
+
     def need_human_night_action(self):
         waiting = []
         for h in self.alive_humans():
@@ -486,13 +528,15 @@ class Game:
         for h, mode in waiting:
             if h.user_id in self.night_prompted_users:
                 continue
+            tip = self._night_waiting_tip(mode)
             if mode == 'witch':
-                msg = f'🌙 {h.name} 你是女巫。請選擇：/save 救人、/poison 名字 毒人、/pass 不行動。'
+                msg = f'🌙 你是女巫。請選擇：/save 救人、/poison 名字 毒人、/pass 不行動。\n{tip}'
             elif mode == 'seer':
-                msg = f'🌙 {h.name} 你是預言家。請用 /check 名字 查驗。'
+                msg = f'🌙 你是預言家。請用 /check 名字 查驗。\n{tip}'
             else:
-                msg = f'🌙 {h.name} 你是狼人。請用 /kill 名字 指定今晚目標。'
-            self.say_system(msg)
+                msg = f'🌙 你是狼人。請用 /kill 名字 指定今晚目標。\n{tip}'
+            if not self.send_private(h.user_id, msg):
+                self.say_system(f'📩 {h.name}，請先私訊機器人一次，才能收到夜間提示。')
             self.night_prompted_users.append(h.user_id)
         return True
 
@@ -503,71 +547,89 @@ class Game:
         self.night_prompted_users = []
         self.seer_check()
         victim = self.plan_wolves()
+        human_target = None
+
         for h in self.alive_humans():
             if h.role == '預言家' and h.pending_action and h.pending_action.get('type') == 'check':
                 target = h.pending_action.get('target')
-                valid = [a.name for a in self.alive() if a.name != h.name]
-                if target in valid:
+                valid = [a.name for a in self.alive() if a.name != h.name] + [x.name for x in self.alive_humans() if x.name != h.name]
+                if target in valid and target in [a.name for a in self.agents]:
                     real = self.get(target)
-                    self.say_system(f'🔐 {h.name} 查驗 {target}：{"狼人" if real.role=="狼人" else "好人"}')
+                    self.send_private(h.user_id, f'🔐 你的查驗結果：{target} 是{"狼人" if real.role=="狼人" else "好人"}')
+
         saved, poisoned = self.witch_act(victim)
+
         for h in self.alive_humans():
             if h.role == '女巫' and h.pending_action:
                 act = h.pending_action
                 if act.get('type') == 'save' and victim and not self.witch_heal_used:
                     saved = True
                     self.witch_heal_used = True
-                    self.say_system(f'🔐 {h.name} 使用了解藥。')
+                    self.send_private(h.user_id, '🔐 你使用了解藥。')
                 elif act.get('type') == 'poison' and not self.witch_poison_used:
                     t = act.get('target')
-                    valid = [a.name for a in self.alive()] + [x.name for x in self.alive_humans()]
-                    if t in valid and t not in [hh.name for hh in self.alive_humans() if hh.name == h.name]:
-                        poisoned = self.get(t) if t in [a.name for a in self.agents] else None
+                    bot_valid = [a.name for a in self.alive() if a.name != h.name]
+                    human_valid = [x.name for x in self.alive_humans() if x.name != h.name]
+                    if t in bot_valid:
+                        poisoned = self.get(t)
                         self.witch_poison_used = True
-                        self.say_system(f'🔐 {h.name} 使用了毒藥。')
+                        self.send_private(h.user_id, f'🔐 你使用了毒藥，目標：{t}')
+                    elif t in human_valid:
+                        human_target = next((x for x in self.alive_humans() if x.name == t), None)
+                        self.witch_poison_used = True
+                        self.send_private(h.user_id, f'🔐 你使用了毒藥，目標：{t}')
+
         for h in self.alive_humans():
             if h.role == '狼人' and h.pending_action and h.pending_action.get('type') == 'kill':
                 t = h.pending_action.get('target')
-                valid = [a.name for a in self.alive() if self.get(a.name).role != '狼人'] + [x.name for x in self.alive_humans() if x.role != '狼人' and x.name != h.name]
-                if t in valid:
-                    victim = self.get(t) if t in [a.name for a in self.agents] else None
-                    human_target = next((x for x in self.alive_humans() if x.name == t), None)
-                else:
+                bot_valid = [a.name for a in self.alive() if a.role != '狼人']
+                human_valid = [x.name for x in self.alive_humans() if x.role != '狼人' and x.name != h.name]
+                if t in bot_valid:
+                    victim = self.get(t)
                     human_target = None
-            else:
-                human_target = None
+                elif t in human_valid:
+                    victim = None
+                    human_target = next((x for x in self.alive_humans() if x.name == t), None)
+
         deaths = []
         if victim and not saved:
             victim.alive = False
             victim.revealed_role = victim.role
             deaths.append(victim.name)
-        if 'human_target' in locals() and human_target and not saved:
+        if human_target and not saved and human_target.alive:
             human_target.alive = False
-            deaths.append(human_target.name)
-        if poisoned:
-            if poisoned.alive:
-                poisoned.alive = False
-                poisoned.revealed_role = poisoned.role
-                if poisoned.name not in deaths:
-                    deaths.append(poisoned.name)
+            if human_target.name not in deaths:
+                deaths.append(human_target.name)
+        if poisoned and poisoned.alive:
+            poisoned.alive = False
+            poisoned.revealed_role = poisoned.role
+            if poisoned.name not in deaths:
+                deaths.append(poisoned.name)
+
         for h in self.humans:
             h.pending_action = None
         self.pending_night_deaths = deaths
 
     def advance_night(self):
-        self.say_system(f'🌙 第 {self.day} 夜開始，天黑請閉眼。')
+        if self.night_started_day != self.day:
+            self.say_system(f'🌙 第 {self.day} 夜開始，天黑請閉眼。')
+            self.night_started_day = self.day
+            self.night_deadline_ts = time.time() + 60
+            self.night_prompted_users = []
         if self.prompt_human_night_action() and not self.human_night_ready():
             return
         self.resolve_night()
+        self.night_deadline_ts = 0.0
         if not self.pending_night_deaths:
             self.say_system('🌤 天亮了，昨晚平安夜。')
         else:
             self.say_system('🌤 天亮了。')
             for name in self.pending_night_deaths:
-                if self.human.joined and name == self.human.name:
-                    self.say_system(f'💀 {self.human.name} 出局，身份是{self.human.role}。')
+                dead_human = next((x for x in self.humans if x.joined and x.name == name), None)
+                if dead_human:
+                    self.say_system(f'💀 {dead_human.name} 出局，身份是{dead_human.role}。')
                     for a in self.alive():
-                        a.public_memory.append(f'{self.human.name} 夜裡出局，身份是{self.human.role}。')
+                        a.public_memory.append(f'{dead_human.name} 夜裡出局，身份是{dead_human.role}。')
                     continue
                 dead = self.get(name)
                 self.say_system(f'💀 {dead.name} 出局，身份是{dead.role}。')
@@ -578,6 +640,8 @@ class Game:
             self.turn_order.append(h.name)
         random.shuffle(self.turn_order)
         self.turn_index = 0
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
         self.phase = 'discussion'
 
     def maybe_claim_role(self, agent: Agent) -> bool:
@@ -591,14 +655,20 @@ class Game:
             self.say_system(f'🗣 第 {self.day} 天討論開始。')
         if self.turn_index >= len(self.turn_order):
             self.turn_index = 0
+            self.human_speech_wait_user_id = 0
+            self.human_speech_deadline_ts = 0.0
             self.phase = 'defense'
             return
         current_name = self.turn_order[self.turn_index]
         human_current = next((h for h in self.alive_humans() if h.name == current_name), None)
         if human_current:
-            self.say_system(f'🎙 輪到真人玩家 {human_current.name} 發言，請直接在群組說話。')
-            self.turn_index += 1
+            if self.human_speech_wait_user_id != human_current.user_id:
+                self.human_speech_wait_user_id = human_current.user_id
+                self.human_speech_deadline_ts = time.time() + 60
+                self.say_system(f'🎙 輪到真人玩家 {human_current.name} 發言，60秒內請直接在群組說話。')
             return
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
         agent = self.get(current_name)
         if not agent.alive:
             self.turn_index += 1
@@ -631,12 +701,21 @@ class Game:
     def voting_step(self):
         self.say_system(f'🗳 第 {self.day} 天投票開始。')
         votes: Dict[str, int] = {}
-        if self.human.joined and self.human.alive:
-            self.say_system(f'🙋 真人玩家 {self.human.name}，請用 /vote 名字 投票。')
+        alive_humans = self.alive_humans()
+
+        if alive_humans and not self.vote_prompted:
+            self.say_system('🙋 真人玩家請用 /vote 名字 投票（60秒，逾時視為棄權）。')
+            self.vote_prompted = True
+            self.vote_deadline_ts = time.time() + 60
+            return
+
+        if alive_humans and self.vote_prompted:
+            all_ready = all(h.pending_action and h.pending_action.get('type') in ('vote', 'pass') for h in alive_humans)
+            if not all_ready and time.time() < self.vote_deadline_ts:
+                return
+
         for agent in self.alive():
-            candidates = [a.name for a in self.alive() if a.name != agent.name]
-            if self.human.joined and self.human.alive:
-                candidates.append(self.human.name)
+            candidates = [a.name for a in self.alive() if a.name != agent.name] + [h.name for h in alive_humans]
             prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n候選人：{candidates}\n只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
             data = self.llm_json(prompt)
             if not data:
@@ -648,25 +727,37 @@ class Game:
             agent.last_vote = target
             self.say(agent, f'我投 {target}，{reason}' if reason else f'我投 {target}')
             votes[target] = votes.get(target, 0) + 1
-        if self.human.joined and self.human.alive and self.human.pending_action and self.human.pending_action.get('type') == 'vote':
-            target = self.human.pending_action.get('target')
-            valid = [a.name for a in self.alive()] 
-            if self.human.joined and self.human.alive:
-                valid = [n for n in valid if n != self.human.name]
-            if target in valid:
-                votes[target] = votes.get(target, 0) + 1
-                self.say_system(f'🗳 {self.human.name} 投給了 {target}。')
-        self.human.pending_action = None
+
+        valid_human_targets = [a.name for a in self.alive()] + [h.name for h in alive_humans]
+        for h in alive_humans:
+            act = h.pending_action or {}
+            if act.get('type') == 'vote':
+                target = act.get('target')
+                valid = [n for n in valid_human_targets if n != h.name]
+                if target in valid:
+                    votes[target] = votes.get(target, 0) + 1
+                    self.say_system(f'🗳 {h.name} 投給了 {target}。')
+                else:
+                    self.say_system(f'⚠️ {h.name} 投票目標無效，視為棄權。')
+            else:
+                self.say_system(f'⌛ {h.name} 投票逾時，視為棄權。')
+            h.pending_action = None
+
+        self.vote_prompted = False
+        self.vote_deadline_ts = 0.0
+
         if not votes:
             self.phase = 'night'
             self.day += 1
             return
+
         top = max(votes.values())
         out_name = random.choice([n for n, c in votes.items() if c == top])
-        if self.human.joined and self.human.alive and out_name == self.human.name:
-            self.human.alive = False
-            self.say_system(f'📢 票型結算，{self.human.name} 被放逐。')
-            self.say_system(f'🪦 {self.human.name} 的身份是{self.human.role}。')
+        out_human = next((h for h in self.alive_humans() if h.name == out_name), None)
+        if out_human:
+            out_human.alive = False
+            self.say_system(f'📢 票型結算，{out_human.name} 被放逐。')
+            self.say_system(f'🪦 {out_human.name} 的身份是{out_human.role}。')
         else:
             out = self.get(out_name)
             out.alive = False
@@ -677,6 +768,7 @@ class Game:
                 a.public_memory.append(f'{out.name} 被放逐，身份是{out.role}。')
                 if out.role == '狼人':
                     a.trust = {k: round(min(0.99, v + (0.15 if k == out.name else 0)), 2) for k, v in a.trust.items()}
+
         if self.winner():
             self.phase = 'ended'
         else:
@@ -684,17 +776,12 @@ class Game:
             self.phase = 'night'
 
     def current_human_speaker(self):
-        if self.phase != 'discussion' or self.turn_index == 0:
+        if self.phase != 'discussion' or self.human_speech_wait_user_id == 0:
             return None
-        prev_index = self.turn_index - 1
-        if prev_index >= len(self.turn_order):
-            return None
-        name = self.turn_order[prev_index]
-        return next((h for h in self.alive_humans() if h.name == name), None)
+        return self.find_human_by_user(self.human_speech_wait_user_id)
 
     def is_human_turn(self, user_id: int):
-        speaker = self.current_human_speaker()
-        return speaker is not None and speaker.user_id == user_id
+        return self.phase == 'discussion' and self.human_speech_wait_user_id == user_id
 
     def record_human_message(self, speaker: str, text: str):
         line = f'[{speaker}] {text.strip()}'
@@ -712,6 +799,30 @@ class Game:
                             a.trust[name] = round(min(0.99, a.trust[name] + 0.06), 2)
 
 
+
+    def handle_timeouts(self):
+        changed = False
+        now = time.time()
+
+        if self.phase == 'night' and self.night_deadline_ts > 0 and now >= self.night_deadline_ts:
+            for h, _ in self.need_human_night_action():
+                h.pending_action = {'type': 'pass'}
+                self.say_system(f'⌛ {h.name} 夜晚操作逾時，視為棄權。')
+                changed = True
+
+        if self.phase == 'discussion' and self.human_speech_wait_user_id and self.human_speech_deadline_ts > 0 and now >= self.human_speech_deadline_ts:
+            h = self.find_human_by_user(self.human_speech_wait_user_id)
+            if h and h.alive:
+                self.say_system(f'⌛ {h.name} 發言逾時，視為棄權。')
+            self.human_speech_wait_user_id = 0
+            self.human_speech_deadline_ts = 0.0
+            self.turn_index += 1
+            changed = True
+
+        if self.phase == 'vote' and self.vote_prompted and self.vote_deadline_ts > 0 and now >= self.vote_deadline_ts:
+            changed = True
+
+        return changed
 
     def maybe_auto_advance(self):
         if not self.auto_run:
@@ -794,10 +905,17 @@ def run_controller():
                 text = (msg.get('text') or '').strip()
                 from_user = msg.get('from', {})
                 user_id = from_user.get('id', 0)
-                if chat.get('id') != CHAT_ID:
-                    continue
+                is_group = chat.get('id') == CHAT_ID
+                is_private = chat.get('type') == 'private'
                 game = Game.load()
+                known_human = game.find_human_by_user(user_id)
+
+                if not is_group and not is_private:
+                    continue
+
                 if text.startswith('/join'):
+                    if not is_group:
+                        continue
                     existing = game.find_human_by_user(user_id)
                     if not existing:
                         existing = HumanPlayer(user_id=user_id)
@@ -809,6 +927,8 @@ def run_controller():
                     game.save()
                     handled_message = True
                 elif text.startswith('/start_game') or text.startswith('/start') or text.startswith('/new'):
+                    if not is_group:
+                        continue
                     old = game
                     game = Game()
                     game.humans = old.humans
@@ -816,6 +936,8 @@ def run_controller():
                     game.save()
                     handled_message = True
                 elif text.startswith('/next'):
+                    if not is_group:
+                        continue
                     game.auto_run = False
                     game.advance()
                     game.save()
@@ -823,103 +945,201 @@ def run_controller():
                 elif text.startswith('/vote'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive:
-                        parts = text.split(maxsplit=1)
-                        if len(parts) > 1:
-                            human.pending_action = {'type': 'vote', 'target': parts[1].split('@')[0].strip()}
-                            game.say_system(f'✅ 已收到 {human.name} 的投票。')
+                        if game.phase != 'vote':
+                            if is_group:
+                                game.say_system(f'⛔ {human.name}，現在不是投票階段。')
+                            else:
+                                game.send_private(user_id, '⛔ 現在不是投票階段。')
+                        else:
+                            parts = text.split(maxsplit=1)
+                            if len(parts) > 1:
+                                target = parts[1].split('@')[0].strip()
+                                human.pending_action = {'type': 'vote', 'target': target}
+                                if is_group:
+                                    game.say_system(f'✅ 已收到 {human.name} 的投票。')
+                                else:
+                                    game.send_private(user_id, f'✅ 已收到你的投票：{target}')
+                            else:
+                                if is_group:
+                                    game.say_system(f'⚠️ {human.name}，請用 /vote 名字。')
+                                else:
+                                    game.send_private(user_id, '⚠️ 請用 /vote 名字。')
                             game.save()
                     handled_message = True
                 elif text.startswith('/kill'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive and human.role == '狼人':
-                        parts = text.split(maxsplit=1)
-                        if len(parts) > 1:
-                            target = parts[1].split('@')[0].strip()
-                            human.pending_action = {'type': 'kill', 'target': target}
-                            game.say_system(f'✅ 已收到 {human.name} 的狼人行動。')
-                            game.say_system(f'🔐 {human.name} 今晚指定目標：{target}')
-                            game.advance()
-                            game.save()
+                        if game.phase != 'night':
+                            if is_group:
+                                game.say_system(f'⛔ {human.name}，現在不是夜晚。')
+                            else:
+                                game.send_private(user_id, '⛔ 現在不是夜晚。')
+                        else:
+                            parts = text.split(maxsplit=1)
+                            if len(parts) > 1:
+                                target = parts[1].split('@')[0].strip()
+                                human.pending_action = {'type': 'kill', 'target': target}
+                                if is_group:
+                                    game.say_system(f'✅ 已收到 {human.name} 的狼人行動。')
+                                else:
+                                    game.send_private(user_id, f'✅ 已收到你的狼人行動：{target}')
+                                game.save()
+                            else:
+                                if is_group:
+                                    game.say_system(f'⚠️ {human.name}，請用 /kill 名字。')
+                                else:
+                                    game.send_private(user_id, '⚠️ 請用 /kill 名字。')
                     handled_message = True
                 elif text.startswith('/check'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive and human.role == '預言家':
-                        parts = text.split(maxsplit=1)
-                        if len(parts) > 1:
-                            target = parts[1].split('@')[0].strip()
-                            valid = [a.name for a in game.alive() if a.name != human.name]
-                            if target in valid:
-                                human.pending_action = {'type': 'check', 'target': target}
-                                real = game.get(target)
-                                game.say_system(f'✅ 已收到 {human.name} 的查驗目標。')
-                                game.say_system(f'🔐 {human.name} 查驗 {target}：{"狼人" if real.role == "狼人" else "好人"}')
-                                game.advance()
-                                game.save()
+                        if game.phase != 'night':
+                            if is_group:
+                                game.say_system(f'⛔ {human.name}，現在不是夜晚。')
                             else:
-                                game.say_system(f'⚠️ {human.name}，查驗目標無效。')
+                                game.send_private(user_id, '⛔ 現在不是夜晚。')
+                        else:
+                            parts = text.split(maxsplit=1)
+                            if len(parts) > 1:
+                                target = parts[1].split('@')[0].strip()
+                                valid = [a.name for a in game.alive() if a.name != human.name] + [x.name for x in game.alive_humans() if x.name != human.name]
+                                if target in valid:
+                                    human.pending_action = {'type': 'check', 'target': target}
+                                    if is_group:
+                                        game.say_system(f'✅ 已收到 {human.name} 的查驗目標。')
+                                    else:
+                                        game.send_private(user_id, f'✅ 已收到你的查驗目標：{target}')
+                                    game.save()
+                                else:
+                                    if is_group:
+                                        game.say_system(f'⚠️ {human.name}，查驗目標無效。')
+                                    else:
+                                        game.send_private(user_id, '⚠️ 查驗目標無效。')
+                            else:
+                                if is_group:
+                                    game.say_system(f'⚠️ {human.name}，請用 /check 名字。')
+                                else:
+                                    game.send_private(user_id, '⚠️ 請用 /check 名字。')
                     handled_message = True
                 elif text.startswith('/save'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive and human.role == '女巫':
-                        human.pending_action = {'type': 'save'}
-                        game.say_system(f'✅ 已收到 {human.name} 的解藥指令。')
-                        game.say_system(f'🔐 {human.name} 已選擇今晚救人。')
-                        game.advance()
-                        game.save()
+                        if game.phase != 'night':
+                            if is_group:
+                                game.say_system(f'⛔ {human.name}，現在不是夜晚。')
+                            else:
+                                game.send_private(user_id, '⛔ 現在不是夜晚。')
+                        elif game.witch_heal_used:
+                            if is_group:
+                                game.say_system(f'⚠️ {human.name}，你的解藥已使用過。')
+                            else:
+                                game.send_private(user_id, '⚠️ 你的解藥已使用過。')
+                        else:
+                            human.pending_action = {'type': 'save'}
+                            if is_group:
+                                game.say_system(f'✅ 已收到 {human.name} 的解藥指令。')
+                            else:
+                                game.send_private(user_id, '✅ 已收到你的解藥指令。')
+                            game.save()
                     handled_message = True
                 elif text.startswith('/poison'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive and human.role == '女巫':
-                        parts = text.split(maxsplit=1)
-                        if len(parts) > 1:
-                            target = parts[1].split('@')[0].strip()
-                            human.pending_action = {'type': 'poison', 'target': target}
-                            game.say_system(f'✅ 已收到 {human.name} 的毒藥指令。')
-                            game.say_system(f'🔐 {human.name} 今晚嘗試毒 {target}。')
-                            game.advance()
-                            game.save()
+                        if game.phase != 'night':
+                            if is_group:
+                                game.say_system(f'⛔ {human.name}，現在不是夜晚。')
+                            else:
+                                game.send_private(user_id, '⛔ 現在不是夜晚。')
+                        elif game.witch_poison_used:
+                            if is_group:
+                                game.say_system(f'⚠️ {human.name}，你的毒藥已使用過。')
+                            else:
+                                game.send_private(user_id, '⚠️ 你的毒藥已使用過。')
+                        else:
+                            parts = text.split(maxsplit=1)
+                            if len(parts) > 1:
+                                target = parts[1].split('@')[0].strip()
+                                human.pending_action = {'type': 'poison', 'target': target}
+                                if is_group:
+                                    game.say_system(f'✅ 已收到 {human.name} 的毒藥指令。')
+                                else:
+                                    game.send_private(user_id, f'✅ 已收到你的毒藥指令：{target}')
+                                game.save()
+                            else:
+                                if is_group:
+                                    game.say_system(f'⚠️ {human.name}，請用 /poison 名字。')
+                                else:
+                                    game.send_private(user_id, '⚠️ 請用 /poison 名字。')
                     handled_message = True
                 elif text.startswith('/pass'):
                     human = game.find_human_by_user(user_id)
                     if human and human.alive:
-                        human.pending_action = {'type': 'pass'}
-                        game.say_system(f'✅ {human.name} 本回合選擇不行動。')
-                        game.advance()
-                        game.save()
+                        if game.phase not in ('night', 'vote'):
+                            game.say_system(f'⛔ {human.name}，現在不能 /pass。')
+                        else:
+                            human.pending_action = {'type': 'pass'}
+                            game.say_system(f'✅ {human.name} 本回合選擇不行動。')
+                            game.save()
                     handled_message = True
                 elif text.startswith('/status'):
+                    if not is_group:
+                        continue
                     post_status(game)
                     handled_message = True
                 elif text.startswith('/reveal'):
+                    if not is_group:
+                        continue
                     game.reveal_all()
                     game.save()
                     handled_message = True
                 elif text.startswith('/stop_game') or text.startswith('/stop'):
+                    if not is_group:
+                        continue
                     game.phase = 'done'
                     game.auto_run = False
                     game.say_system('⏹ 遊戲已停止。')
                     game.save()
                     handled_message = True
                 elif text.startswith('/auto_on'):
+                    if not is_group:
+                        continue
                     game.auto_run = True
                     game.say_system('▶️ 已開啟自動推進。')
                     game.save()
                     handled_message = True
                 elif text.startswith('/auto_off'):
+                    if not is_group:
+                        continue
                     game.auto_run = False
                     game.say_system('⏸ 已關閉自動推進。')
                     game.save()
                     handled_message = True
                 elif text and not from_user.get('is_bot'):
                     human = game.find_human_by_user(user_id)
-                    if human and game.is_human_turn(user_id):
+                    if not human:
+                        handled_message = True
+                        continue
+                    if is_private:
+                        game.send_private(user_id, '📩 已收到。夜晚請用私訊送 /kill /check /save /poison；投票可用 /vote。')
+                        handled_message = True
+                        continue
+                    if game.is_human_turn(user_id):
                         game.record_human_message(human.name, text)
+                        game.human_speech_wait_user_id = 0
+                        game.human_speech_deadline_ts = 0.0
+                        game.turn_index += 1
                         game.save()
-                    elif human and game.phase == 'discussion':
+                    elif game.phase == 'discussion':
                         game.say_system(f'⛔ {human.name}，現在不是你的發言時間。')
+                    elif game.phase == 'night':
+                        game.say_system(f'🤫 {human.name}，現在是夜晚，請只使用夜間指令。')
+                    elif game.phase == 'vote':
+                        game.say_system(f'🗳 {human.name}，現在是投票階段，請用 /vote 名字。')
                     handled_message = True
-            if not handled_message and os.path.exists(STATE_FILE):
+            if os.path.exists(STATE_FILE):
                 game = Game.load()
+                if game.handle_timeouts():
+                    game.save()
                 if game.maybe_auto_advance():
                     game.save()
         except Exception as e:
