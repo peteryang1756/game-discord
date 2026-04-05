@@ -16,7 +16,7 @@ TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.5'))
 SYSTEM_SLEEP = float(os.environ.get('SYSTEM_SLEEP', '1.0'))
 POLL_SLEEP = float(os.environ.get('POLL_SLEEP', '2.0'))
 
-BOT_NAMES = ['阿哲', '彼得', '小P', '顧問', '小羊', '阿J']
+BOT_NAMES = ['1號阿哲', '2號彼得', '3號小P', '4號顧問', '5號小羊', '6號阿J']
 BOT_STYLES = [
     '冷靜理性，會抓矛盾，講話短。',
     '話多愛帶節奏，喜歡先壓人。',
@@ -65,6 +65,7 @@ class HumanPlayer:
     role: Optional[str] = None
     replaced_bot: Optional[str] = None
     pending_action: Optional[dict] = None
+    dm_ready: bool = False
 
 
 class LLM:
@@ -290,6 +291,11 @@ class Game:
         except Exception:
             return False
 
+    def ensure_private_contact(self, human: HumanPlayer):
+        ok = self.send_private(human.user_id, '✅ 連線成功：你可以在這裡收到身份與夜晚提示。')
+        human.dm_ready = bool(ok)
+        return human.dm_ready
+
     def say_system(self, text: str):
         print('[SYSTEM]', text)
         self.log.append(f'[SYSTEM] {text}')
@@ -419,8 +425,11 @@ class Game:
             for h in self.humans:
                 if h.joined and h.role:
                     ok = self.send_private(h.user_id, f'🔐 你的身份是：{h.role}')
+                    h.dm_ready = bool(ok)
                     if not ok:
-                        self.say_system(f'📩 {h.name} 請先私訊機器人一次，才能收到身份與夜晚提示。')
+                        self.say_system(f'📩 {h.name} 無法收到私訊身份，請先私訊機器人 /start。')
+                    else:
+                        self.say_system(f'✅ {h.name} 已收到私訊身份。')
             self.say_system('規則：白天按輪次發言；投票用 /vote 名字；夜晚技能請私訊機器人使用 /kill /check /save /poison /pass')
         else:
             self.say_system('🎭 V2.3 狼人殺開始。')
@@ -535,9 +544,12 @@ class Game:
                 msg = f'🌙 你是預言家。請用 /check 名字 查驗。\n{tip}'
             else:
                 msg = f'🌙 你是狼人。請用 /kill 名字 指定今晚目標。\n{tip}'
-            if not self.send_private(h.user_id, msg):
-                self.say_system(f'📩 {h.name}，請先私訊機器人一次，才能收到夜間提示。')
-            self.night_prompted_users.append(h.user_id)
+            if not h.dm_ready:
+                h.dm_ready = self.ensure_private_contact(h)
+            if h.dm_ready and self.send_private(h.user_id, msg):
+                self.night_prompted_users.append(h.user_id)
+            else:
+                self.say_system(f'📩 {h.name} 尚未私訊機器人，夜晚無法送達提示（請先私訊 /start）。')
         return True
 
     def human_night_ready(self):
@@ -806,6 +818,8 @@ class Game:
 
         if self.phase == 'night' and self.night_deadline_ts > 0 and now >= self.night_deadline_ts:
             for h, _ in self.need_human_night_action():
+                if not h.dm_ready:
+                    self.say_system(f'📩 {h.name} 未完成私訊連線，本夜視為棄權。')
                 h.pending_action = {'type': 'pass'}
                 self.say_system(f'⌛ {h.name} 夜晚操作逾時，視為棄權。')
                 changed = True
@@ -922,11 +936,21 @@ def run_controller():
                         game.humans.append(existing)
                     existing.joined = True
                     existing.name = from_user.get('first_name') or from_user.get('username') or '玩家'
+                    existing.dm_ready = game.ensure_private_contact(existing)
                     game.sanitize_humans()
                     game.say_system(f'🙋 真人玩家 {existing.name} 已加入。')
+                    if not existing.dm_ready:
+                        game.say_system(f'📩 {existing.name} 請先私訊機器人 /start，否則收不到身份與夜晚提示。')
                     game.save()
                     handled_message = True
                 elif text.startswith('/start_game') or text.startswith('/start') or text.startswith('/new'):
+                    if is_private:
+                        if known_human:
+                            known_human.dm_ready = True
+                            game.save()
+                            game.send_private(user_id, '✅ 私訊連線已啟用。回群組用 /start_game 開局。')
+                            handled_message = True
+                        continue
                     if not is_group:
                         continue
                     old = game
