@@ -31,6 +31,10 @@ MAX_DAYS = int(os.getenv("MAX_DAYS", "6"))
 DRY_RUN = os.getenv("DRY_RUN", "0") == "1"
 MAX_HUMAN_PLAYERS = int(os.getenv("MAX_HUMAN_PLAYERS", "2"))
 HUMAN_VOTE_TIMEOUT = int(os.getenv("HUMAN_VOTE_TIMEOUT", "35"))
+MAX_PLAYER_NAME_LENGTH = 18
+COLLISION_NAME_TRUNCATE = 12
+UNDERCOVER_SPEECH_RANGE_TEXT = "20 到 70"
+MAX_UNDERCOVER_REASON_LENGTH = 30
 
 AI_PROFILES = [
     {
@@ -263,11 +267,13 @@ class WerewolfDiscordBot(commands.Bot):
             if len(self.humans) >= MAX_HUMAN_PLAYERS:
                 await ctx.send(f"⚠️ 真人玩家上限為 {MAX_HUMAN_PLAYERS}。")
                 return
-            base_name = (getattr(ctx.author, "display_name", "") or ctx.author.name or "玩家").strip()[:18]
+            base_name = (
+                getattr(ctx.author, "display_name", "") or ctx.author.name or "玩家"
+            ).strip()[:MAX_PLAYER_NAME_LENGTH]
             taken = {x["name"] for x in AI_PROFILES} | {h.name for h in self.humans.values()}
             name = base_name or "玩家"
             if name in taken:
-                name = f"{name[:12]}-{str(ctx.author.id)[-4:]}"
+                name = f"{name[:COLLISION_NAME_TRUNCATE]}-{str(ctx.author.id)[-4:]}"
             self.humans[ctx.author.id] = HumanPlayer(user_id=ctx.author.id, name=name)
             await ctx.send(f"🙋 真人玩家 {name} 已加入（{len(self.humans)}/{MAX_HUMAN_PLAYERS}）。")
 
@@ -420,7 +426,7 @@ class WerewolfDiscordBot(commands.Bot):
                     avatar_url=profile["avatar_url"],
                 )
             )
-        humans = list(self.humans.values())[: min(MAX_HUMAN_PLAYERS, len(players))]
+        humans = list(self.humans.values())[:MAX_HUMAN_PLAYERS]
         for i, h in enumerate(humans):
             players[i] = Agent(
                 idx=players[i].idx,
@@ -690,7 +696,7 @@ class WerewolfDiscordBot(commands.Bot):
             my_word = self.undercover_word_under if agent.role == "臥底" else self.undercover_word_civil
             goal = (
                 f"你在玩誰是臥底。你的身份：{agent.role}，你的詞：{my_word}。"
-                "請發言 20 到 70 字，描述詞語特徵但不要直接講出詞。"
+                f"請發言 {UNDERCOVER_SPEECH_RANGE_TEXT} 字，描述詞語特徵但不要直接講出詞。"
             )
             fallback = "我先說一個特徵：它很常見，但不同情境下感受不太一樣。"
             speech = await self.think_speech(agent, self.public_snapshot(), goal, fallback)
@@ -722,7 +728,7 @@ class WerewolfDiscordBot(commands.Bot):
             ]
             data = await self.json_response(messages, {"target": fallback_target, "reason": "我先投最可疑的。"})
             target = str(data.get("target", fallback_target))
-            reason = str(data.get("reason", "我先投最可疑的。"))[:30]
+            reason = str(data.get("reason", "我先投最可疑的。"))[:MAX_UNDERCOVER_REASON_LENGTH]
             if target not in candidates:
                 target = fallback_target
             votes[target] = votes.get(target, 0) + 1
