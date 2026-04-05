@@ -16,7 +16,7 @@ TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.5'))
 SYSTEM_SLEEP = float(os.environ.get('SYSTEM_SLEEP', '1.0'))
 POLL_SLEEP = float(os.environ.get('POLL_SLEEP', '2.0'))
 
-BOT_NAMES = ['1號阿哲', '2號彼得', '3號小P', '4號顧問', '5號小羊', '6號阿J']
+BOT_NAMES = ['阿哲', '彼得', '小P', '顧問', '小羊', '阿J']
 BOT_STYLES = [
     '冷靜理性，會抓矛盾，講話短。',
     '話多愛帶節奏，喜歡先壓人。',
@@ -34,7 +34,7 @@ BOT_TOKENS = [
     os.environ.get('TG_BOT_6', ''),
 ]
 ROLES = ['狼人', '狼人', '預言家', '女巫', '村民', '村民']
-SYSTEM_PROMPT = '你在扮演真人玩家玩中文狼人殺。不要提到AI、模型、程式。說話像Telegram群組真人。若要求JSON，僅輸出合法JSON。'
+SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文狼人殺。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
 
 
 @dataclass
@@ -341,21 +341,22 @@ class Game:
         alive = '、'.join(self.active_players_names())
         dead_parts = [f'{a.name}({a.revealed_role or "未知"})' for a in self.agents if not a.alive]
         dead = '、'.join(dead_parts) or '無'
-        recent = '\n'.join(self.log[-12:]) or '無'
-        return f'第{self.day}天，階段：{self.phase}\n存活：{alive}\n出局：{dead}\n最近訊息：\n{recent}'
+        recent = '\n'.join(self.log[-60:]) or '無'
+        return f'第{self.day}天，階段：{self.phase}\n存活：{alive}\n出局：{dead}\n最近訊息（完整脈絡）：\n{recent}'
 
     def snapshot_private(self, agent: Agent):
         data = {
             'name': agent.name,
             'role': agent.role,
             'style': agent.style,
-            'private_notes': agent.private_notes[-8:],
+            'private_notes': agent.private_notes[-20:],
+            'long_memory': agent.public_memory[-120:],
             'suspicion': agent.suspicion,
             'trust': agent.trust,
             'grudges': agent.grudges,
-            'attacked_by': agent.attacked_by[-5:],
-            'defended_by': agent.defended_by[-5:],
-            'wolf_plan': self.wolf_plan[-4:] if agent.role == '狼人' else [],
+            'attacked_by': agent.attacked_by[-12:],
+            'defended_by': agent.defended_by[-12:],
+            'wolf_plan': self.wolf_plan[-8:] if agent.role == '狼人' else [],
         }
         return json.dumps(data, ensure_ascii=False)
 
@@ -430,7 +431,7 @@ class Game:
                         self.say_system(f'📩 {h.name} 無法收到私訊身份，請先私訊機器人 /start。')
                     else:
                         self.say_system(f'✅ {h.name} 已收到私訊身份。')
-            self.say_system('規則：白天按輪次發言；投票用 /vote 名字；夜晚技能請私訊機器人使用 /kill /check /save /poison /pass')
+            self.say_system('規則：白天按輪次發言；投票用 /vote 名字；夜晚技能請私訊機器人使用 /kill /check /save /poison /pass；可用 /quit 退出本局')
         else:
             self.say_system('🎭 V2.3 狼人殺開始。')
             self.say_system('玩家：' + '、'.join(a.name for a in self.agents if a.alive))
@@ -693,7 +694,7 @@ class Game:
             extra += f'最近保你的人：{agent.defended_by[-3:] }。可稍微給信任。\n'
         if self.maybe_claim_role(agent):
             extra += '你可以考慮跳預言家，並給查驗資訊。\n'
-        prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n{extra}\n請輸出一段18到70字的群組發言，要像真人，最好點名1個人。'''
+        prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n{extra}\n請輸出一段35到120字的群組發言，要像台灣玩家自然聊天，可帶口語語氣，最好點名1到2個人，並明確說你的懷疑或站邊。'''
         text = self.llm_text(prompt)
         if not text:
             self.turn_index += 1
@@ -704,7 +705,7 @@ class Game:
     def defense_step(self):
         alive = self.alive()
         target = random.choice(alive)
-        prompt = f'''你是{target.name}，有人正在懷疑你。身份：{target.role}。人格：{target.style}\n私人狀態：{self.snapshot_private(target)}\n公開局勢：\n{self.snapshot_public()}\n請輸出一段短辯解，20到60字。'''
+        prompt = f'''你是{target.name}，有人正在懷疑你。身份：{target.role}。人格：{target.style}\n私人狀態：{self.snapshot_private(target)}\n公開局勢：\n{self.snapshot_public()}\n請輸出一段40到110字的辯解，口氣像台灣玩家，具體回應質疑，不要空話。'''
         text = self.llm_text(prompt)
         if text:
             self.say(target, text)
@@ -809,6 +810,24 @@ class Game:
                     if any(w in lower for w in ['保', '白', '好人']):
                         if name in a.trust:
                             a.trust[name] = round(min(0.99, a.trust[name] + 0.06), 2)
+
+    def process_human_quit(self, human: HumanPlayer):
+        if not human.alive:
+            human.joined = False
+            human.pending_action = None
+            return
+        human.alive = False
+        human.joined = False
+        human.pending_action = None
+        self.say_system(f'🚪 {human.name} 已退出本局。')
+        if human.name in self.turn_order:
+            self.turn_order = [n for n in self.turn_order if n != human.name]
+            if self.turn_index >= len(self.turn_order):
+                self.turn_index = 0
+        self.human_speech_wait_user_id = 0
+        self.human_speech_deadline_ts = 0.0
+        if self.winner():
+            self.phase = 'ended'
 
 
 
@@ -1104,6 +1123,14 @@ def run_controller():
                             human.pending_action = {'type': 'pass'}
                             game.say_system(f'✅ {human.name} 本回合選擇不行動。')
                             game.save()
+                    handled_message = True
+                elif text.startswith('/quit') or text.startswith('/leave'):
+                    human = game.find_human_by_user(user_id)
+                    if human and human.joined:
+                        game.process_human_quit(human)
+                        game.save()
+                        if is_private:
+                            game.send_private(user_id, '✅ 你已退出本局。')
                     handled_message = True
                 elif text.startswith('/status'):
                     if not is_group:
