@@ -15,8 +15,7 @@ STATE_FILE = os.environ.get('STATE_FILE', 'game_state_v21.json')
 TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.5'))
 SYSTEM_SLEEP = float(os.environ.get('SYSTEM_SLEEP', '1.0'))
 POLL_SLEEP = float(os.environ.get('POLL_SLEEP', '2.0'))
-
-BOT_NAMES = ['阿哲', '彼得', '小P', '顧問', '小羊', '阿J']
+VOTE_APPEAL_SECONDS = int(os.environ.get('VOTE_APPEAL_SECONDS', '120'))
 BOT_STYLES = [
     '冷靜理性，會抓矛盾，講話短。',
     '話多愛帶節奏，喜歡先壓人。',
@@ -25,6 +24,7 @@ BOT_STYLES = [
     '保守膽小，容易跟票，但會記仇。',
     '嘴砲型，故意戳人看反應。',
 ]
+BOT_NAMES = ['阿哲', '排排', '小P', '小白', '川普', '維尼']
 BOT_TOKENS = [
     os.environ.get('TG_BOT_1', ''),
     os.environ.get('TG_BOT_2', ''),
@@ -43,9 +43,162 @@ UNDERCOVER_WORD_PAIRS = [
     ('咖啡', '可可'),
     ('籃球', '排球'),
     ('牙膏', '洗面乳'),
+    ('勇往直前', '全力以赴'),
+    ('新年', '跨年'),
+    ('牛奶', '豆漿'),
+    ('烤肉', '涮肉'),
+    ('壁紙', '貼畫'),
+    ('郭德綱', '周立波'),
+    ('甄嬛傳', '紅樓夢'),
+    ('男友', '前男友'),
+    ('情人節', '光棍節'),
+    ('沐浴露', '沐浴鹽'),
+    ('天天向上', '非誠勿擾'),
+    ('劉詩詩', '劉亦菲'),
+    ('語無倫次', '詞不達意'),
+    ('公車', '地鐵'),
+    ('同學', '同桌'),
+    ('冠軍', '第一'),
+    ('圖書館', '圖書店'),
+    ('梁山伯與祝英台', '羅密歐與茱麗葉'),
+    ('紅燒牛肉麵', '香辣牛肉麵'),
+    ('高麗菜', '生菜'),
+    ('牛肉乾', '豬肉脯'),
+    ('泡泡糖', '棒棒糖'),
+    ('小瀋陽', '宋小寶'),
+    ('謝娜張傑', '鄧超孫儷'),
+    ('薰衣草', '滿天星'),
+    ('生活費', '零用錢'),
+    ('班主任', '輔導員'),
+    ('福爾摩斯', '工藤新一'),
+    ('氣泡', '水泡'),
+    ('電腦', 'ipad'),
+    ('剩女', '禦姐'),
+    ('流星花園', '花樣男子'),
+    ('蜘蛛人', '蝙蝠俠'),
+    ('富二代', '高富帥'),
+    ('神鵰俠情侶', '天龍八部'),
+    ('口香糖', '木糖醇'),
+    ('雲霄飛車', '碰碰車'),
+    ('鴨舌帽', '遮陽帽'),
+    ('雙胞胎', '龍鳳胎'),
+    ('若曦', '晴川'),
+    ('首爾', '東京'),
+    ('保安', '保鑣'),
+    ('唇膏', '口紅'),
+    ('結婚', '訂婚'),
+    ('近視眼鏡', '隱形眼鏡'),
+    ('成吉思汗', '努爾哈赤'),
+    ('紙巾', '濕紙巾'),
+    ('海豚', '海獅'),
+    ('印表機', '掃描機'),
+    ('魚香肉絲', '四喜丸子'),
+    ('森馬', '以純'),
+    ('杭州', '蘇州'),
+    ('包青天', '狄仁傑'),
+    ('蝴蝶', '蜜蜂'),
+    ('魔術師', '魔法師'),
+    ('枕頭', '抱枕'),
+    ('作家', '編劇'),
+    ('醜小鴨', '灰姑娘'),
+    ('端午節', '中秋節'),
+    ('孟非', '樂嘉'),
+    ('高跟鞋', '增高鞋'),
+    ('金絲猴', '大白兔'),
+    ('洗髮精', '護髮素'),
+    ('葡萄', '提子'),
+    ('小籠包', '灌湯包'),
+    ('張韶涵', '王心凌'),
+    ('反彈琵琶', '亂彈棉花'),
+    ('鐵觀音', '碧螺春'),
+    ('風扇', '空調'),
+    ('玫瑰', '月季'),
+    ('謝娜', '李湘'),
+    ('龍鳳呈祥', '鴛鴦戲水'),
+    ('油條', '麻花'),
+    ('玻璃', '鏡子'),
+    ('十面埋伏', '四面楚歌'),
+    ('臉盆', '水桶'),
+    ('作文', '論文'),
+    ('麵包', '蛋糕'),
+    ('那英', '韓紅'),
+    ('婚紗', '喜服'),
+    ('酸菜魚', '水煮魚'),
+    ('果粒橙', '鮮橙多'),
+    ('麥克風', '擴音器'),
+    ('手機', '座機'),
+    ('美人心計', '傾世皇妃'),
+    ('狀元', '冠軍'),
+    ('辣椒', '芥末'),
+    ('被子', '床單'),
+    ('獎牌', '金牌'),
+    ('餅乾', '薯片'),
+    ('小品', '話劇'),
+    ('盒子', '箱子'),
+    ('老佛爺', '老天爺'),
+    ('吉他', '琵琶'),
+    ('媽媽', '娘'),
+    ('哈密瓜', '西瓜'),
+    ('兩小無猜', '青梅竹馬'),
+    ('麻婆豆腐', '皮蛋豆腐'),
+    ('自行車', '電動車'),
+    ('綠茶', '苦茶'),
+    ('餃子', '包子'),
+    ('洗衣粉', '皂角粉'),
+    ('金庸', '古龍'),
+    ('童話', '神話'),
+    ('暗戀', '備胎'),
+    ('元芳', '展昭'),
+    ('晨光', '真彩'),
+    ('甄子丹', '李連傑'),
+    ('馬鈴薯粉', '酸辣粉'),
+    ('乾洗機', '甩乾機'),
+    ('捲髮', '直髮'),
+    ('絲襪', '秋褲'),
+    ('妻子管嚴', '吃軟飯'),
+    ('菠蘿蜜', '榴蓮'),
+    ('漢堡包', '肉夾饃'),
+    ('太陽傘', '雨傘'),
+    ('鵝毛', '雞毛'),
+    ('飯桶', '飯碗'),
+    ('胖子', '肥肉'),
+    ('太監', '人妖'),
+    ('動物', '植物'),
+    ('積木', '樹木'),
+    ('蝴蝶', '飛蛾'),
+    ('大便', '臭豆腐'),
 ]
+
 SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文派對遊戲。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
 
+NAME_ALIAS_MAP = {
+    '彼得': '排排',
+    '顧問': '川普',
+    '小羊': '小白',
+    '阿J': '維尼',
+}
+
+
+def _normalize_name(value: str) -> str:
+    if not value:
+        return value
+    for old, new in NAME_ALIAS_MAP.items():
+        value = value.replace(old, new)
+    return value
+
+
+def _normalize_state_names(obj):
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            nk = _normalize_name(k) if isinstance(k, str) else k
+            out[nk] = _normalize_state_names(v)
+        return out
+    if isinstance(obj, list):
+        return [_normalize_state_names(v) for v in obj]
+    if isinstance(obj, str):
+        return _normalize_name(obj)
+    return obj
 
 @dataclass
 class Agent:
@@ -149,6 +302,10 @@ class Game:
         self.human_speech_deadline_ts: float = 0.0
         self.vote_prompted: bool = False
         self.vote_deadline_ts: float = 0.0
+        self.vote_round: int = 1
+        self.vote_appeal_deadline_ts: float = 0.0
+        self.vote_round2_candidates: List[str] = []
+        self.vote_appeal_target: Optional[str] = None
         self.undercover_word_civil: str = ''
         self.undercover_word_under: str = ''
         self.undercover_name: str = ''
@@ -225,9 +382,13 @@ class Game:
         self.human_speech_deadline_ts = 0.0
         self.vote_prompted = False
         self.vote_deadline_ts = 0.0
+        self.vote_round = 1
+        self.vote_appeal_deadline_ts = 0.0
+        self.vote_round2_candidates = []
+        self.vote_appeal_target = None
         self.undercover_word_civil = ''
-        self.undercover_word_under = ''
         self.undercover_name = ''
+
 
     def _apply_human_replacements(self):
         live_agents = [a for a in self.agents if a.alive]
@@ -246,6 +407,35 @@ class Game:
             replaced.revealed_role = '替補離場'
             roles_assigned.append(f'{h.name} 取代 {replaced.name}')
         return roles_assigned
+
+    def _vote_candidates(self):
+        alive = self.active_players_names()
+        if self.vote_round == 2 and self.vote_round2_candidates:
+            narrowed = [n for n in self.vote_round2_candidates if n in alive]
+            return narrowed[:2]
+        return alive
+
+    def _clear_human_actions(self):
+        for h in self.alive_humans():
+            h.pending_action = None
+
+    def _finalize_vote(self, out_name: str):
+        out_human = next((h for h in self.alive_humans() if h.name == out_name), None)
+        if out_human:
+            out_human.alive = False
+            self.say_system(f'📢 票型結算，{out_human.name} 被放逐。')
+            self.say_system(f'🪦 {out_human.name} 的身份是{out_human.role}。')
+            return
+
+        out = self.get(out_name)
+        out.alive = False
+        out.revealed_role = out.role
+        self.say_system(f'📢 票型結算，{out.name} 被放逐。')
+        self.say_system(f'🪦 {out.name} 的身份是{out.role}。')
+        for a in self.alive():
+            a.public_memory.append(f'{out.name} 被放逐，身份是{out.role}。')
+            if out.role == '狼人':
+                a.trust = {k: round(min(0.99, v + (0.15 if k == out.name else 0)), 2) for k, v in a.trust.items()}
 
     def to_dict(self):
         return {
@@ -268,6 +458,10 @@ class Game:
             'human_speech_deadline_ts': self.human_speech_deadline_ts,
             'vote_prompted': self.vote_prompted,
             'vote_deadline_ts': self.vote_deadline_ts,
+            'vote_round': self.vote_round,
+            'vote_appeal_deadline_ts': self.vote_appeal_deadline_ts,
+            'vote_round2_candidates': self.vote_round2_candidates,
+            'vote_appeal_target': self.vote_appeal_target,
             'undercover_word_civil': self.undercover_word_civil,
             'undercover_word_under': self.undercover_word_under,
             'undercover_name': self.undercover_name,
@@ -283,9 +477,11 @@ class Game:
         g.day = data['day']
         g.phase = data['phase']
         g.game_mode = data.get('game_mode', 'werewolf')
-        g.turn_order = data.get('turn_order', [])
+        g.turn_order = [_normalize_name(n) for n in data.get('turn_order', [])]
         g.turn_index = data.get('turn_index', 0)
-        g.log = data.get('log', [])
+        g.log = [
+            _normalize_name(x) if isinstance(x, str) else x for x in data.get('log', [])
+        ]
         g.witch_heal_used = data.get('witch_heal_used', False)
         g.witch_poison_used = data.get('witch_poison_used', False)
         g.wolf_plan = data.get('wolf_plan', [])
@@ -299,19 +495,34 @@ class Game:
         g.human_speech_deadline_ts = data.get('human_speech_deadline_ts', 0.0)
         g.vote_prompted = data.get('vote_prompted', False)
         g.vote_deadline_ts = data.get('vote_deadline_ts', 0.0)
+        g.vote_round = data.get('vote_round', 1)
+        g.vote_appeal_deadline_ts = data.get('vote_appeal_deadline_ts', 0.0)
+        g.vote_round2_candidates = data.get('vote_round2_candidates', [])
+        g.vote_appeal_target = data.get('vote_appeal_target')
         g.undercover_word_civil = data.get('undercover_word_civil', '')
         g.undercover_word_under = data.get('undercover_word_under', '')
         g.undercover_name = data.get('undercover_name', '')
-        g.human = HumanPlayer(**data.get('human', {}))
-        g.humans = [HumanPlayer(**h) for h in data.get('humans', ([] if not data.get('human', {}).get('joined') else [data.get('human')]))]
+        # normalize legacy/swap names in saved dict keys (suspicion/trust/grudges)
+        legacy_agents = []
+        for a in data.get('agents', []):
+            name = _normalize_name(a.get('name', ''))
+            a['name'] = name
+            a['replaced_bot'] = _normalize_name(a.get('replaced_bot')) if isinstance(a, dict) else None
+            for key in ['suspicion', 'trust', 'grudges']:
+                if key in a and isinstance(a[key], dict):
+                    a[key] = { _normalize_name(k): v for k, v in a[key].items() }
+            legacy_agents.append(a)
+
+        g.human = HumanPlayer(**_normalize_state_names(data.get('human', {})))
+        g.humans = [HumanPlayer(**_normalize_state_names(h)) for h in data.get('humans', ([] if not data.get('human', {}).get('joined') else [data.get('human')]))]
         g.human_role = data.get('human_role')
-        g.agents = [Agent(**a) for a in data['agents']]
+        g.agents = [Agent(**a) for a in legacy_agents]
         g.sanitize_humans()
         return g
 
     def save(self):
         with open(STATE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
+            json.dump(_normalize_state_names(self.to_dict()), f, ensure_ascii=False, indent=2)
 
     @staticmethod
     def load():
@@ -930,28 +1141,59 @@ class Game:
 
     def voting_step(self):
         self.say_system(f'🗳 第 {self.day} 天投票開始。')
-        votes: Dict[str, int] = {}
         alive_humans = self.alive_humans()
+        candidates = self._vote_candidates()
 
-        if alive_humans and not self.vote_prompted:
-            self.say_system('🙋 真人玩家請用 /vote 名字 投票（60秒，逾時視為棄權）。')
-            self.vote_prompted = True
-            self.vote_deadline_ts = time.time() + 60
+        if len(candidates) <= 1:
+            self.say_system('❗ 有效票型候選不足，直接進入下一日。')
+            self.phase = 'night'
+            self.day += 1
+            self.vote_round = 1
+            self.vote_round2_candidates = []
+            self.vote_appeal_target = None
+            self.vote_appeal_deadline_ts = 0.0
+            self._clear_human_actions()
             return
 
-        if alive_humans and self.vote_prompted:
+        votes: Dict[str, int] = {}
+
+        if self.vote_round == 1:
+            if alive_humans and not self.vote_prompted:
+                self.say_system('🙋 真人玩家請用 /vote 名字 投票（60秒，逾時視為棄權）。')
+                self.vote_prompted = True
+                self.vote_deadline_ts = time.time() + 60
+                return
+
+            if alive_humans and self.vote_prompted:
+                all_ready = all(h.pending_action and h.pending_action.get('type') in ('vote', 'pass') for h in alive_humans)
+                if not all_ready and time.time() < self.vote_deadline_ts:
+                    return
+
+        if self.vote_round == 2 and not self.vote_prompted:
+            target = self.vote_appeal_target
+            if not target:
+                self.vote_prompted = False
+            else:
+                self.say_system(f'🔁 複議階段：請在 {VOTE_APPEAL_SECONDS} 秒內重新提交 /vote {target} 或其他。')
+                self.vote_prompted = True
+                self.vote_deadline_ts = time.time() + VOTE_APPEAL_SECONDS
+                return
+
+        if self.vote_round == 2 and self.vote_prompted:
             all_ready = all(h.pending_action and h.pending_action.get('type') in ('vote', 'pass') for h in alive_humans)
-            if not all_ready and time.time() < self.vote_deadline_ts:
+            if alive_humans and not all_ready and time.time() < self.vote_deadline_ts:
                 return
 
         for agent in self.alive():
-            candidates = [a.name for a in self.alive() if a.name != agent.name] + [h.name for h in alive_humans]
-            prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n候選人：{candidates}\n只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
+            ai_candidates = [a for a in candidates if a != agent.name]
+            if not ai_candidates:
+                continue
+            prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n候選人：{ai_candidates}\n只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
             data = self.llm_json(prompt)
             if not data:
                 continue
             target = data.get('target')
-            if target not in candidates:
+            if target not in ai_candidates:
                 continue
             reason = str(data.get('reason', ''))[:30]
             agent.last_vote = target
@@ -959,6 +1201,7 @@ class Game:
             votes[target] = votes.get(target, 0) + 1
 
         valid_human_targets = [a.name for a in self.alive()] + [h.name for h in alive_humans]
+        valid_human_targets = [n for n in valid_human_targets if n in candidates]
         for h in alive_humans:
             act = h.pending_action or {}
             if act.get('type') == 'vote':
@@ -979,31 +1222,34 @@ class Game:
         if not votes:
             self.phase = 'night'
             self.day += 1
+            self.vote_round = 1
+            self.vote_round2_candidates = []
+            self.vote_appeal_target = None
             return
 
         top = max(votes.values())
-        out_name = random.choice([n for n, c in votes.items() if c == top])
-        out_human = next((h for h in self.alive_humans() if h.name == out_name), None)
-        if out_human:
-            out_human.alive = False
-            self.say_system(f'📢 票型結算，{out_human.name} 被放逐。')
-            self.say_system(f'🪦 {out_human.name} 的身份是{out_human.role}。')
-        else:
-            out = self.get(out_name)
-            out.alive = False
-            out.revealed_role = out.role
-            self.say_system(f'📢 票型結算，{out.name} 被放逐。')
-            self.say_system(f'🪦 {out.name} 的身份是{out.role}。')
-            for a in self.alive():
-                a.public_memory.append(f'{out.name} 被放逐，身份是{out.role}。')
-                if out.role == '狼人':
-                    a.trust = {k: round(min(0.99, v + (0.15 if k == out.name else 0)), 2) for k, v in a.trust.items()}
+        top_targets = [n for n, c in votes.items() if c == top]
+        tied_top = len(top_targets) > 1
 
+        if self.vote_round == 1 and tied_top:
+            self.vote_round = 2
+            self.vote_round2_candidates = top_targets
+            self.vote_appeal_target = top_targets[0]
+            self._clear_human_actions()
+            self.say_system(f'🔁 本輪平票，候選為：{"、".join(top_targets)}，發起複議，進入第二輪。')
+            return
+
+        out_name = random.choice(top_targets)
+        self._finalize_vote(out_name)
         if self.winner():
             self.phase = 'ended'
         else:
             self.day += 1
             self.phase = 'night'
+
+        self.vote_round = 1
+        self.vote_round2_candidates = []
+        self.vote_appeal_target = None
 
     def current_human_speaker(self):
         if self.phase != 'discussion' or self.human_speech_wait_user_id == 0:
@@ -1070,7 +1316,16 @@ class Game:
             changed = True
 
         if self.phase == 'vote' and self.vote_prompted and self.vote_deadline_ts > 0 and now >= self.vote_deadline_ts:
-            changed = True
+            if self.vote_round == 2 and self.vote_round2_candidates:
+                # 第二輪逾時：仍然用目前投票最高票結算，不再等待
+                self.vote_round = 2
+                self.vote_appeal_target = self.vote_round2_candidates[0]
+                for h in self.alive_humans():
+                    if h.pending_action and h.pending_action.get('type') not in ('vote', 'pass'):
+                        self.say_system(f'⌛ {h.name} 在複議階段逾時，視為棄權。')
+                changed = True
+            else:
+                changed = True
 
         return changed
 
@@ -1260,11 +1515,23 @@ def run_controller():
                             parts = text.split(maxsplit=1)
                             if len(parts) > 1:
                                 target = parts[1].split('@')[0].strip()
-                                human.pending_action = {'type': 'vote', 'target': target}
-                                if is_group:
-                                    game.say_system(f'✅ 已收到 {human.name} 的投票。')
+                                if target == 'pass':
+                                    human.pending_action = {'type': 'pass'}
                                 else:
-                                    game.send_private(user_id, f'✅ 已收到你的投票：{target}')
+                                    candidates = game._vote_candidates()
+                                    if target in candidates and target != human.name:
+                                        human.pending_action = {'type': 'vote', 'target': target}
+                                    else:
+                                        if is_group:
+                                            game.say_system(f'⚠️ {human.name}，目標無效。')
+                                        else:
+                                            game.send_private(user_id, '⚠️ 目標無效。')
+                                        game.save()
+                                if human.pending_action:
+                                    if is_group:
+                                        game.say_system(f'✅ 已收到 {human.name} 的投票。')
+                                    else:
+                                        game.send_private(user_id, f'✅ 已收到你的投票：{target}')
                             else:
                                 if is_group:
                                     game.say_system(f'⚠️ {human.name}，請用 /vote 名字。')
@@ -1400,6 +1667,26 @@ def run_controller():
                         continue
                     post_status(game)
                     handled_message = True
+                elif text.startswith('/appeal'):
+                    human = game.find_human_by_user(user_id)
+                    if human and human.alive:
+                        if game.phase != 'vote':
+                            if is_group:
+                                game.say_system(f'⚠️ {human.name}，現在不是投票複議階段。')
+                            else:
+                                game.send_private(user_id, '⚠️ 現在不是投票複議階段。')
+                        elif game.vote_round != 2:
+                            if is_group:
+                                game.say_system(f'⚠️ {human.name}，目前非第二輪平票複議。')
+                            else:
+                                game.send_private(user_id, '⚠️ 目前非第二輪平票複議。')
+                        else:
+                            if not game.vote_appeal_target:
+                                game.say_system(f'ℹ️ {human.name}，目前平票票型仍未確定。')
+                            else:
+                                game.send_private(user_id, '🗳 請使用 /vote 名字 參與複議。')
+                            handled_message = True
+                    handled_message = True
                 elif text.startswith('/reveal'):
                     if not is_group:
                         continue
@@ -1466,3 +1753,6 @@ def run_controller():
 
 if __name__ == '__main__':
     run_controller()
+
+def normalize_state_text(text: str) -> str:
+    return _normalize_name(text)
