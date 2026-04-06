@@ -171,12 +171,7 @@ UNDERCOVER_WORD_PAIRS = [
 
 SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文派對遊戲。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
 
-NAME_ALIAS_MAP = {
-    '彼得': '排排',
-    '顧問': '川普',
-    '小羊': '小白',
-    '阿J': '維尼',
-}
+NAME_ALIAS_MAP = {}
 
 
 def _normalize_name(value: str) -> str:
