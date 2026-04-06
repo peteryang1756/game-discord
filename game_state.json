@@ -11,7 +11,7 @@
     },
     {
       "idx": 1,
-      "name": "彼得",
+      "name": "排排",
       "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc",
       "style": "話多，喜歡帶節奏",
       "role": "女巫",
@@ -29,7 +29,7 @@
     },
     {
       "idx": 3,
-      "name": "顧問",
+      "name": "川普",
       "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY",
       "style": "像分析師，常說機率和邏輯",
       "role": "村民",
@@ -38,7 +38,7 @@
     },
     {
       "idx": 4,
-      "name": "小羊",
+      "name": "小白",
       "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc",
       "style": "膽小保守，常跟票",
       "role": "預言家",
@@ -47,7 +47,7 @@
     },
     {
       "idx": 5,
-      "name": "阿J",
+      "name": "維尼",
       "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc",
       "style": "嘴砲型，愛挑釁",
       "role": "狼人",

@@ -2,7 +2,7 @@
   "players": [
     {
       "idx": 0,
-      "name": "顧問",
+      "name": "川普",
       "style": "像分析師，常說機率和邏輯",
       "role": "狼人",
       "alive": false,
@@ -12,7 +12,7 @@
     },
     {
       "idx": 1,
-      "name": "阿J",
+      "name": "維尼",
       "style": "嘴砲型，愛挑釁",
       "role": "預言家",
       "alive": false,
@@ -42,7 +42,7 @@
     },
     {
       "idx": 4,
-      "name": "彼得",
+      "name": "排排",
       "style": "話多，喜歡帶節奏",
       "role": "村民",
       "alive": true,
@@ -52,7 +52,7 @@
     },
     {
       "idx": 5,
-      "name": "小羊",
+      "name": "小白",
       "style": "膽小保守，常跟票",
       "role": "狼人",
       "alive": false,
