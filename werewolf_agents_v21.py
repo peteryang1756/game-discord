@@ -24,7 +24,7 @@ BOT_STYLES = [
     '保守膽小，容易跟票，但會記仇。',
     '嘴砲型，故意戳人看反應。',
 ]
-BOT_NAMES = ['阿哲', '排排', '小P', '小白', '川普', '維尼']
+BOT_NAMES = ['阿哲', '彼得', '小P', '顧問', '小羊', '阿J']
 BOT_TOKENS = [
     os.environ.get('TG_BOT_1', ''),
     os.environ.get('TG_BOT_2', ''),
@@ -171,12 +171,7 @@ UNDERCOVER_WORD_PAIRS = [
 
 SYSTEM_PROMPT = '你在扮演真人玩家玩繁體中文派對遊戲。不要提到AI、模型、程式。說話像台灣年輕人聊天，口語自然、有情緒、有立場，不要中國用語。若要求JSON，僅輸出合法JSON。'
 
-NAME_ALIAS_MAP = {
-    '彼得': '排排',
-    '顧問': '川普',
-    '小羊': '小白',
-    '阿J': '維尼',
-}
+NAME_ALIAS_MAP = {}
 
 
 def _normalize_name(value: str) -> str:
