@@ -502,7 +502,8 @@ class Game:
         for a in data.get('agents', []):
             name = _normalize_name(a.get('name', ''))
             a['name'] = name
-            a['replaced_bot'] = _normalize_name(a.get('replaced_bot')) if isinstance(a, dict) else None
+            if isinstance(a, dict) and 'replaced_bot' in a:
+                a.pop('replaced_bot', None)
             for key in ['suspicion', 'trust', 'grudges']:
                 if key in a and isinstance(a[key], dict):
                     a[key] = { _normalize_name(k): v for k, v in a[key].items() }
