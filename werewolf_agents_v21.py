@@ -7,9 +7,18 @@ import urllib.request
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional, Tuple
 
-API_BASE = os.environ.get('LLM_API_BASE', 'https://free.9e.nz/v1')
-API_KEY = os.environ.get('LLM_API_KEY', '')
-MODEL = os.environ.get('LLM_MODEL', 'gpt-5.4')
+API_BASE = os.environ.get('LLM_API_BASE', 'https://api.poe.com/v1')
+API_KEY = os.environ.get('LLM_API_KEY', 'sk-poe-ai6w5hHUJydjHhVzIEwPWHlWELSsR5hGJErtiaqdaO4')
+
+# 為每個角色分配不同模型
+AGENT_MODELS = [
+    'glm-5-t',        # 阿哲
+    'gemma-4-31b-t',  # 排排
+    'gemma-4-31b',    # 小P
+    'gpt-5.3-codex-spark',  # 小白
+    'gpt-5.3-codex-spark',  # 川普
+    'gpt-5.3-codex-spark',  # 維尼
+]
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '-1003644055956'))
 STATE_FILE = os.environ.get('STATE_FILE', 'game_state_v21.json')
 TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.5'))
@@ -193,13 +202,13 @@ class HumanPlayer:
 
 
 class LLM:
-    def chat(self, messages: List[Dict], temperature: float = 0.9) -> str:
+    def chat(self, messages: List[Dict], model: str, temperature: float = 0.9) -> str:
         if not API_KEY:
             raise RuntimeError('missing API key')
         req = urllib.request.Request(
             f'{API_BASE.rstrip("/")}/chat/completions',
             data=json.dumps({
-                'model': MODEL,
+                'model': model,
                 'messages': messages,
                 'temperature': temperature,
             }, ensure_ascii=False).encode(),
@@ -599,14 +608,15 @@ class Game:
         }
         return json.dumps(data, ensure_ascii=False)
 
-    def llm_text(self, prompt: str):
+    def llm_text(self, prompt: str, agent_idx: int = 0):
+        model = AGENT_MODELS[agent_idx % len(AGENT_MODELS)]
         last_err = None
         for _ in range(4):
             try:
                 text = self.llm.chat([
                     {'role': 'system', 'content': SYSTEM_PROMPT},
                     {'role': 'user', 'content': prompt},
-                ], temperature=0.95).strip()
+                ], model, temperature=0.95).strip()
                 if text:
                     return text
             except Exception as e:
@@ -615,14 +625,15 @@ class Game:
         print('llm_text failed', last_err)
         return None
 
-    def llm_json(self, prompt: str):
+    def llm_json(self, prompt: str, agent_idx: int = 0):
+        model = AGENT_MODELS[agent_idx % len(AGENT_MODELS)]
         last_err = None
         for _ in range(4):
             try:
                 raw = self.llm.chat([
                     {'role': 'system', 'content': SYSTEM_PROMPT},
                     {'role': 'user', 'content': prompt},
-                ], temperature=0.8)
+                ], model, temperature=0.8)
                 if raw.startswith('```'):
                     raw = raw.strip('`').split('\n', 1)[-1]
                 data = json.loads(raw)
@@ -719,7 +730,7 @@ class Game:
         if not targets:
             return None
         prompt = f'''你現在要扮演狼人團隊的共同策略腦，只輸出JSON。\n狼人：{[w.name for w in wolves]}\n目標候選：{[t.name for t in targets]}\n公開局勢：\n{self.snapshot_public()}\n\n請輸出 {{"kill":"名字","cover":"白天想保的人","push":"白天想踩的人","note":"20字內策略"}}'''
-        plan = self.llm_json(prompt)
+        plan = self.llm_json(prompt, wolves[0].idx if wolves else 0)
         if not plan:
             return None
         valid_targets = [t.name for t in targets]
@@ -742,7 +753,7 @@ class Game:
         if not cands:
             return
         prompt = f'''你是{seer.name}，身份是預言家。\n私人狀態：{self.snapshot_private(seer)}\n公開局勢：\n{self.snapshot_public()}\n候選查驗對象：{[a.name for a in cands]}\n只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
-        data = self.llm_json(prompt)
+        data = self.llm_json(prompt, seer.idx)
         if not data:
             return
         target_name = data.get('target')
@@ -760,7 +771,7 @@ class Game:
             return False, None
         alive_targets = [a.name for a in self.alive() if a.name != witch.name]
         prompt = f'''你是{witch.name}，身份是女巫。\n私人狀態：{self.snapshot_private(witch)}\n公開局勢：\n{self.snapshot_public()}\n昨晚狼人目標：{victim.name if victim else '無'}\n可毒對象：{alive_targets}\n\n只輸出JSON：{{"save":true或false,"poison":"名字或空字串","reason":"20字內"}}\n注意：解藥和毒藥都可能已用過。'''
-        data = self.llm_json(prompt)
+        data = self.llm_json(prompt, witch.idx)
         if not data:
             return False, None
         saved = False
@@ -970,13 +981,12 @@ class Game:
 公開局勢：
 {self.snapshot_public()}
 請輸出40到110字發言，描述你的詞特徵但不要直接講詞，語氣像台灣玩家，並可點名一位你懷疑的人。'''
-        text = self.llm_text(prompt)
+        text = self.llm_text(prompt, agent.idx)
         if text:
             self.say(agent, text)
         self.turn_index += 1
 
     def undercover_voting_step(self):
-        self.say_system(f'🗳 第 {self.day} 輪投票開始。')
         votes: Dict[str, int] = {}
         alive_humans = self.alive_humans()
 
@@ -998,7 +1008,7 @@ class Game:
 {self.snapshot_public()}
 候選人：{candidates}
 只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
-            data = self.llm_json(prompt)
+            data = self.llm_json(prompt, agent.idx)
             if not data:
                 continue
             target = data.get('target')
@@ -1085,7 +1095,7 @@ class Game:
         if self.maybe_claim_role(agent):
             extra += '你可以考慮跳預言家，並給查驗資訊。\n'
         prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n{extra}\n請輸出一段35到120字的群組發言，要像台灣玩家自然聊天，可帶口語語氣，最好點名1到2個人，並明確說你的懷疑或站邊。'''
-        text = self.llm_text(prompt)
+        text = self.llm_text(prompt, agent.idx)
         if not text:
             self.turn_index += 1
             return
@@ -1096,7 +1106,7 @@ class Game:
         alive = self.alive()
         target = random.choice(alive)
         prompt = f'''你是{target.name}，有人正在懷疑你。身份：{target.role}。人格：{target.style}\n私人狀態：{self.snapshot_private(target)}\n公開局勢：\n{self.snapshot_public()}\n請輸出一段40到110字的辯解，口氣像台灣玩家，具體回應質疑，不要空話。'''
-        text = self.llm_text(prompt)
+        text = self.llm_text(prompt, target.idx)
         if text:
             self.say(target, text)
         self.phase = 'vote'
@@ -1151,7 +1161,7 @@ class Game:
             if not ai_candidates:
                 continue
             prompt = f'''你是{agent.name}。身份：{agent.role}。人格：{agent.style}\n私人狀態：{self.snapshot_private(agent)}\n公開局勢：\n{self.snapshot_public()}\n候選人：{ai_candidates}\n只輸出JSON：{{"target":"名字","reason":"20字內"}}'''
-            data = self.llm_json(prompt)
+            data = self.llm_json(prompt, agent.idx)
             if not data:
                 continue
             target = data.get('target')

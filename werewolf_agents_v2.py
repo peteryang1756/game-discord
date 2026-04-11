@@ -7,9 +7,18 @@ import urllib.request
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional
 
-API_BASE = os.environ.get('LLM_API_BASE', 'https://elysiver.h-e.top/v1')
-API_KEY = os.environ.get('LLM_API_KEY', '')
-MODEL = os.environ.get('LLM_MODEL', 'gpt-5.4')
+API_BASE = os.environ.get('LLM_API_BASE', 'https://api.poe.com/v1')
+API_KEY = os.environ.get('LLM_API_KEY', 'sk-poe-ai6w5hHUJydjHhVzIEwPWHlWELSsR5hGJErtiaqdaO4')
+
+# 為每個角色分配不同模型
+AGENT_MODELS = [
+    'glm-5-t',        # 阿哲
+    'gemma-4-31b-t',  # 排排
+    'gemma-4-31b',    # 小P
+    'gpt-5.3-codex-spark',  # 小白
+    'gpt-5.3-codex-spark',  # 川普
+    'gpt-5.3-codex-spark',  # 維尼
+]
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '-5103856268'))
 TURN_SLEEP = float(os.environ.get('TURN_SLEEP', '1.8'))
 OPENING_SLEEP = float(os.environ.get('OPENING_SLEEP', '1.2'))
@@ -17,7 +26,7 @@ STATE_FILE = os.environ.get('STATE_FILE', 'game_state_v2.json')
 DRY_RUN = os.environ.get('DRY_RUN', '0') == '1'
 MAX_DAYS = int(os.environ.get('MAX_DAYS', '6'))
 
-BOT_NAMES = ['阿哲', '彼得', '小P', '顧問', '小羊', '阿J']
+BOT_NAMES = ['阿哲', '排排', '小P', '小白', '川普', '維尼']
 BOT_STYLES = [
     '冷靜理性，講話短，喜歡抓矛盾，不容易被帶風向。',
     '話多，擅長帶節奏，喜歡先站邊再找理由。',
@@ -75,12 +84,11 @@ class Agent:
 
 
 class LLM:
-    def __init__(self, api_base: str, api_key: str, model: str):
+    def __init__(self, api_base: str, api_key: str):
         self.api_base = api_base.rstrip('/')
         self.api_key = api_key
-        self.model = model
 
-    def chat(self, messages: List[Dict], temperature: float = 0.9) -> str:
+    def chat(self, messages: List[Dict], model: str, temperature: float = 0.9) -> str:
         if not self.api_key:
             return ''
         url = f'{self.api_base}/chat/completions'
@@ -91,7 +99,7 @@ class LLM:
             'Accept': 'application/json',
         }
         payload = {
-            'model': self.model,
+            'model': model,
             'messages': messages,
             'temperature': temperature,
         }
@@ -108,7 +116,7 @@ class LLM:
 
 class Game:
     def __init__(self):
-        self.llm = LLM(API_BASE, API_KEY, MODEL)
+        self.llm = LLM(API_BASE, API_KEY)
         self.agents = self._make_agents()
         self.day = 1
         self.phase = 'init'
@@ -185,9 +193,9 @@ class Game:
                 if agent.name in other.suspicion and any(k in text for k in ['怪', '狼', '不對', '做身份', '帶節奏']):
                     other.suspicion[agent.name] = round(min(0.99, other.suspicion[agent.name] + 0.03), 2)
 
-    def json_response(self, messages: List[Dict], fallback: Dict) -> Dict:
+    def json_response(self, messages: List[Dict], agent_idx: int, fallback: Dict) -> Dict:
         try:
-            raw = self.llm.chat(messages, temperature=0.8)
+            raw = self.llm.chat(messages, AGENT_MODELS[agent_idx % len(AGENT_MODELS)], temperature=0.8)
             raw = raw.strip()
             if raw.startswith('```'):
                 raw = raw.strip('`')
@@ -196,9 +204,9 @@ class Game:
         except Exception:
             return fallback
 
-    def text_response(self, messages: List[Dict], fallback: str) -> str:
+    def text_response(self, messages: List[Dict], agent_idx: int, fallback: str) -> str:
         try:
-            txt = self.llm.chat(messages, temperature=0.95)
+            txt = self.llm.chat(messages, AGENT_MODELS[agent_idx % len(AGENT_MODELS)], temperature=0.95)
             return txt.strip() or fallback
         except Exception:
             return fallback
@@ -217,7 +225,7 @@ class Game:
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': f'''你是玩家「{agent.name}」。\n人格：{agent.style}\n身份：{agent.role}\n\n你的私人狀態：{self.private_snapshot(agent)}\n\n公開局勢：\n{context}\n\n當前任務：{goal}\n\n請只輸出一段 18 到 60 字的 Telegram 群組發言。\n不要加引號，不要解釋。'''}
         ]
-        return self.text_response(messages, fallback)
+        return self.text_response(messages, agent.idx, fallback)
 
     def think_vote(self, agent: Agent) -> str:
         alive_targets = [a.name for a in self.alive_agents() if a.name != agent.name]
@@ -227,7 +235,7 @@ class Game:
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': f'''你是玩家「{agent.name}」。\n身份：{agent.role}\n人格：{agent.style}\n\n可投票對象：{alive_targets}\n你的私人狀態：{self.private_snapshot(agent)}\n公開局勢：\n{self.public_snapshot()}\n\n請輸出 JSON：{{"target":"名字","reason":"20字內理由"}}\n只能從可投票對象選一人。'''}
         ]
-        data = self.json_response(messages, fallback)
+        data = self.json_response(messages, agent.idx, fallback)
         target = data.get('target', fallback['target'])
         if target not in alive_targets:
             target = fallback['target']
