@@ -1,10 +1,65 @@
 {
   "day": 1,
-  "phase": "idle",
+  "phase": "done",
   "game_mode": "undercover",
+  "turn_order": [
+    "小P",
+    "小白",
+    "川普",
+    "阿哲",
+    "Petwr",
+    "排排"
+  ],
+  "turn_index": 0,
+  "log": [
+    "[SYSTEM] 🕵️ 誰是臥底開始。真人玩家入局：Petwr 取代 維尼",
+    "[SYSTEM] 玩家：阿哲、排排、小P、小白、川普、Petwr",
+    "[SYSTEM] ✅ Petwr 已收到私訊詞語。",
+    "[SYSTEM] 規則：每輪發言描述你的詞但不要直接講出來；之後投票 /vote 名字；可用 /quit 退出本局",
+    "[SYSTEM] 🕵️ 第 1 輪發言開始。請描述你的詞，但不要直接講詞。",
+    "[小P] 我這個詞算超經典的家常菜，顏色偏重、味道很下飯，通常會配白飯直接多吃一碗。名字跟實際內容有點微妙落差，我先小懷疑一下川普，等等看他怎麼描述。",
+    "[小白] 我這個也是很常見的熱炒系，味道算濃、帶點鹹香微辣，醬汁感有存在，重點不是走清爽路線。名字聽起來會讓人先想到某個元素，但端上來不一定是那回事。我先看一下Petwr，怕新來的還沒抓到節奏。",
+    "[川普] 我這個也是超級配飯派，基本上不是走清淡路線，香氣很強、醬色也滿有存在感，吃起來會有一點刺激感但不會太誇張。名字很會誤導人，我目前先看Petwr，先聽你怎麼接。",
+    "[阿哲] 我這個也是熱炒店超常見，醬香很重、鹹甜辣都有一點，重點超級下飯，白飯沒了會很空虛。名字會讓人以為主角很明確，但其實大家都懂那個梗。我先小看一下Petwr，怕他還在抓感覺。",
+    "[SYSTEM] 🎙 輪到真人玩家 Petwr 描述，60秒內發言。",
+    "[Petwr] Hello",
+    "[排排] 我這個也是熱炒店點菜很常出現的那種，醬色偏深、鹹香帶一點辣，超級配白飯，重點是名字很會讓人想歪，實際上大家吃的重點根本不是字面那個。Petwr 目前最怪，先懷疑他。",
+    "[SYSTEM] 🗳 第 1 輪投票開始。",
+    "[SYSTEM] 🙋 真人玩家請用 /vote 名字 投票（60秒，逾時視為棄權）。",
+    "[SYSTEM] ⚠️ Petwr，請用 /vote 名字。",
+    "[SYSTEM] 🗳 第 1 輪投票開始。",
+    "[SYSTEM] ⚠️ Petwr，請用 /vote 名字。",
+    "[SYSTEM] ✅ 已收到 Petwr 的投票。",
+    "[SYSTEM] 🗳 第 1 輪投票開始。",
+    "[阿哲] 我投 Petwr，只講Hello太像沒詞",
+    "[排排] 我投 Petwr，只講Hello太空像亂投",
+    "[小P] 我投 Petwr，只講Hello最沒資訊",
+    "[小白] 我投 Petwr，只講Hello資訊太少",
+    "[川普] 我投 Petwr，只講Hello資訊太少",
+    "[SYSTEM] 🗳 Petwr 投給了 川普。",
+    "[SYSTEM] 📢 票型結算，Petwr 被淘汰。",
+    "[SYSTEM] ⏹ 遊戲已停止。"
+  ],
+  "witch_heal_used": false,
+  "witch_poison_used": false,
+  "wolf_plan": [],
+  "pending_night_deaths": [],
   "auto_run": false,
-  "last_auto_ts": 0,
-  "agents": [],
+  "last_auto_ts": 1775920180.7974057,
+  "night_prompted_users": [],
+  "night_started_day": 0,
+  "night_deadline_ts": 0.0,
+  "human_speech_wait_user_id": 0,
+  "human_speech_deadline_ts": 0.0,
+  "vote_prompted": false,
+  "vote_deadline_ts": 0.0,
+  "vote_round": 1,
+  "vote_appeal_deadline_ts": 0.0,
+  "vote_round2_candidates": [],
+  "vote_appeal_target": null,
+  "undercover_word_civil": "魚香肉絲",
+  "undercover_word_under": "四喜丸子",
+  "undercover_name": "Petwr",
   "human": {
     "user_id": 0,
     "name": "",
@@ -15,23 +70,294 @@
     "pending_action": null,
     "dm_ready": false
   },
-  "humans": [],
-  "log": [],
-  "pending_kill": null,
-  "night_actions": {},
-  "turn_order": [],
-  "turn_index": 0,
-  "vote_open": false,
-  "vote_prompted": false,
-  "vote_deadline_ts": 0,
+  "humans": [
+    {
+      "user_id": 7542727150,
+      "name": "Petwr",
+      "joined": false,
+      "alive": false,
+      "role": "臥底",
+      "replaced_bot": "維尼",
+      "pending_action": null,
+      "dm_ready": true
+    }
+  ],
   "human_role": null,
-  "human_speech_wait_user_id": 0,
-  "human_speech_deadline_ts": 0,
-  "night_deadline_ts": 0,
-  "vote_round": 1,
-  "vote_round2_candidates": [],
-  "vote_appeal_target": null,
-  "undercover_word_civil": "",
-  "undercover_word_under": "",
-  "undercover_name": ""
+  "agents": [
+    {
+      "idx": 0,
+      "name": "阿哲",
+      "token": "8550197535:AAEARCOL1BX-_zRNQirrKDXXGYd-_74bDMo",
+      "style": "冷靜理性，會抓矛盾，講話短。",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你的狼人隊友是 維尼。",
+        "你是平民，你的詞是「魚香肉絲」。找出臥底。"
+      ],
+      "public_memory": [
+        "小P：我這個詞算超經典的家常菜，顏色偏重、味道很下飯，通常會配白飯直接多吃一碗。名字跟實際內容有點微妙落差，我先小懷疑一下川普，等等看他怎麼描述。",
+        "小白：我這個也是很常見的熱炒系，味道算濃、帶點鹹香微辣，醬汁感有存在，重點不是走清爽路線。名字聽起來會讓人先想到某個元素，但端上來不一定是那回事。我先看一下Petwr，怕新來的還沒抓到節奏。",
+        "川普：我這個也是超級配飯派，基本上不是走清淡路線，香氣很強、醬色也滿有存在感，吃起來會有一點刺激感但不會太誇張。名字很會誤導人，我目前先看Petwr，先聽你怎麼接。",
+        "Petwr：Hello",
+        "排排：我這個也是熱炒店點菜很常出現的那種，醬色偏深、鹹香帶一點辣，超級配白飯，重點是名字很會讓人想歪，實際上大家吃的重點根本不是字面那個。Petwr 目前最怪，先懷疑他。",
+        "排排：我投 Petwr，只講Hello太空像亂投",
+        "小P：我投 Petwr，只講Hello最沒資訊",
+        "小白：我投 Petwr，只講Hello資訊太少",
+        "川普：我投 Petwr，只講Hello資訊太少"
+      ],
+      "suspicion": {
+        "排排": 0.23,
+        "小P": 0.25,
+        "小白": 0.26,
+        "川普": 0.28,
+        "維尼": 0.44
+      },
+      "trust": {
+        "排排": 0.25,
+        "小P": 0.2,
+        "小白": 0.33,
+        "川普": 0.29,
+        "維尼": 0.32
+      },
+      "grudges": {
+        "排排": 0.0,
+        "小P": 0.0,
+        "小白": 0.0,
+        "川普": 0.0,
+        "維尼": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 1,
+      "name": "排排",
+      "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc",
+      "style": "話多愛帶節奏，喜歡先壓人。",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你每晚可查驗一人身份。",
+        "你是平民，你的詞是「魚香肉絲」。找出臥底。"
+      ],
+      "public_memory": [
+        "小P：我這個詞算超經典的家常菜，顏色偏重、味道很下飯，通常會配白飯直接多吃一碗。名字跟實際內容有點微妙落差，我先小懷疑一下川普，等等看他怎麼描述。",
+        "小白：我這個也是很常見的熱炒系，味道算濃、帶點鹹香微辣，醬汁感有存在，重點不是走清爽路線。名字聽起來會讓人先想到某個元素，但端上來不一定是那回事。我先看一下Petwr，怕新來的還沒抓到節奏。",
+        "川普：我這個也是超級配飯派，基本上不是走清淡路線，香氣很強、醬色也滿有存在感，吃起來會有一點刺激感但不會太誇張。名字很會誤導人，我目前先看Petwr，先聽你怎麼接。",
+        "阿哲：我這個也是熱炒店超常見，醬香很重、鹹甜辣都有一點，重點超級下飯，白飯沒了會很空虛。名字會讓人以為主角很明確，但其實大家都懂那個梗。我先小看一下Petwr，怕他還在抓感覺。",
+        "Petwr：Hello",
+        "阿哲：我投 Petwr，只講Hello太像沒詞",
+        "小P：我投 Petwr，只講Hello最沒資訊",
+        "小白：我投 Petwr，只講Hello資訊太少",
+        "川普：我投 Petwr，只講Hello資訊太少"
+      ],
+      "suspicion": {
+        "阿哲": 0.3,
+        "小P": 0.34,
+        "小白": 0.22,
+        "川普": 0.23,
+        "維尼": 0.2
+      },
+      "trust": {
+        "阿哲": 0.3,
+        "小P": 0.16,
+        "小白": 0.18,
+        "川普": 0.39,
+        "維尼": 0.36
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "小P": 0.0,
+        "小白": 0.0,
+        "川普": 0.0,
+        "維尼": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 2,
+      "name": "小P",
+      "token": "8750936435:AAGEeEV-qmSuVx-oXQi_VlXdQr5P0qhRl7s",
+      "style": "自保型，被踩會反打。",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你是平民，你的詞是「魚香肉絲」。找出臥底。"
+      ],
+      "public_memory": [
+        "小白：我這個也是很常見的熱炒系，味道算濃、帶點鹹香微辣，醬汁感有存在，重點不是走清爽路線。名字聽起來會讓人先想到某個元素，但端上來不一定是那回事。我先看一下Petwr，怕新來的還沒抓到節奏。",
+        "川普：我這個也是超級配飯派，基本上不是走清淡路線，香氣很強、醬色也滿有存在感，吃起來會有一點刺激感但不會太誇張。名字很會誤導人，我目前先看Petwr，先聽你怎麼接。",
+        "阿哲：我這個也是熱炒店超常見，醬香很重、鹹甜辣都有一點，重點超級下飯，白飯沒了會很空虛。名字會讓人以為主角很明確，但其實大家都懂那個梗。我先小看一下Petwr，怕他還在抓感覺。",
+        "Petwr：Hello",
+        "排排：我這個也是熱炒店點菜很常出現的那種，醬色偏深、鹹香帶一點辣，超級配白飯，重點是名字很會讓人想歪，實際上大家吃的重點根本不是字面那個。Petwr 目前最怪，先懷疑他。",
+        "阿哲：我投 Petwr，只講Hello太像沒詞",
+        "排排：我投 Petwr，只講Hello太空像亂投",
+        "小白：我投 Petwr，只講Hello資訊太少",
+        "川普：我投 Petwr，只講Hello資訊太少"
+      ],
+      "suspicion": {
+        "阿哲": 0.43,
+        "排排": 0.31,
+        "小白": 0.22,
+        "川普": 0.2,
+        "維尼": 0.38
+      },
+      "trust": {
+        "阿哲": 0.29,
+        "排排": 0.18,
+        "小白": 0.24,
+        "川普": 0.19,
+        "維尼": 0.36
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "排排": 0.0,
+        "小白": 0.0,
+        "川普": 0.0,
+        "維尼": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 3,
+      "name": "小白",
+      "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY",
+      "style": "分析師型，常談資訊量、票型、邏輯。",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你有解藥與毒藥，各一次。",
+        "你是平民，你的詞是「魚香肉絲」。找出臥底。"
+      ],
+      "public_memory": [
+        "小P：我這個詞算超經典的家常菜，顏色偏重、味道很下飯，通常會配白飯直接多吃一碗。名字跟實際內容有點微妙落差，我先小懷疑一下川普，等等看他怎麼描述。",
+        "川普：我這個也是超級配飯派，基本上不是走清淡路線，香氣很強、醬色也滿有存在感，吃起來會有一點刺激感但不會太誇張。名字很會誤導人，我目前先看Petwr，先聽你怎麼接。",
+        "阿哲：我這個也是熱炒店超常見，醬香很重、鹹甜辣都有一點，重點超級下飯，白飯沒了會很空虛。名字會讓人以為主角很明確，但其實大家都懂那個梗。我先小看一下Petwr，怕他還在抓感覺。",
+        "Petwr：Hello",
+        "排排：我這個也是熱炒店點菜很常出現的那種，醬色偏深、鹹香帶一點辣，超級配白飯，重點是名字很會讓人想歪，實際上大家吃的重點根本不是字面那個。Petwr 目前最怪，先懷疑他。",
+        "阿哲：我投 Petwr，只講Hello太像沒詞",
+        "排排：我投 Petwr，只講Hello太空像亂投",
+        "小P：我投 Petwr，只講Hello最沒資訊",
+        "川普：我投 Petwr，只講Hello資訊太少"
+      ],
+      "suspicion": {
+        "阿哲": 0.31,
+        "排排": 0.29,
+        "小P": 0.25,
+        "川普": 0.34,
+        "維尼": 0.26
+      },
+      "trust": {
+        "阿哲": 0.33,
+        "排排": 0.29,
+        "小P": 0.3,
+        "川普": 0.33,
+        "維尼": 0.32
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "排排": 0.0,
+        "小P": 0.0,
+        "川普": 0.0,
+        "維尼": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 4,
+      "name": "川普",
+      "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc",
+      "style": "保守膽小，容易跟票，但會記仇。",
+      "role": "平民",
+      "alive": true,
+      "revealed_role": null,
+      "private_notes": [
+        "你是平民，你的詞是「魚香肉絲」。找出臥底。"
+      ],
+      "public_memory": [
+        "小P：我這個詞算超經典的家常菜，顏色偏重、味道很下飯，通常會配白飯直接多吃一碗。名字跟實際內容有點微妙落差，我先小懷疑一下川普，等等看他怎麼描述。",
+        "小白：我這個也是很常見的熱炒系，味道算濃、帶點鹹香微辣，醬汁感有存在，重點不是走清爽路線。名字聽起來會讓人先想到某個元素，但端上來不一定是那回事。我先看一下Petwr，怕新來的還沒抓到節奏。",
+        "阿哲：我這個也是熱炒店超常見，醬香很重、鹹甜辣都有一點，重點超級下飯，白飯沒了會很空虛。名字會讓人以為主角很明確，但其實大家都懂那個梗。我先小看一下Petwr，怕他還在抓感覺。",
+        "Petwr：Hello",
+        "排排：我這個也是熱炒店點菜很常出現的那種，醬色偏深、鹹香帶一點辣，超級配白飯，重點是名字很會讓人想歪，實際上大家吃的重點根本不是字面那個。Petwr 目前最怪，先懷疑他。",
+        "阿哲：我投 Petwr，只講Hello太像沒詞",
+        "排排：我投 Petwr，只講Hello太空像亂投",
+        "小P：我投 Petwr，只講Hello最沒資訊",
+        "小白：我投 Petwr，只講Hello資訊太少"
+      ],
+      "suspicion": {
+        "阿哲": 0.34,
+        "排排": 0.4,
+        "小P": 0.28,
+        "小白": 0.28,
+        "維尼": 0.4
+      },
+      "trust": {
+        "阿哲": 0.35,
+        "排排": 0.23,
+        "小P": 0.25,
+        "小白": 0.18,
+        "維尼": 0.19
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "排排": 0.0,
+        "小P": 0.0,
+        "小白": 0.0,
+        "維尼": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    },
+    {
+      "idx": 5,
+      "name": "維尼",
+      "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc",
+      "style": "嘴砲型，故意戳人看反應。",
+      "role": "狼人",
+      "alive": false,
+      "revealed_role": "替補離場",
+      "private_notes": [
+        "你的狼人隊友是 阿哲。"
+      ],
+      "public_memory": [],
+      "suspicion": {
+        "阿哲": 0.41,
+        "排排": 0.26,
+        "小P": 0.38,
+        "小白": 0.33,
+        "川普": 0.25
+      },
+      "trust": {
+        "阿哲": 0.29,
+        "排排": 0.2,
+        "小P": 0.36,
+        "小白": 0.26,
+        "川普": 0.21
+      },
+      "grudges": {
+        "阿哲": 0.0,
+        "排排": 0.0,
+        "小P": 0.0,
+        "小白": 0.0,
+        "川普": 0.0
+      },
+      "defended_by": [],
+      "attacked_by": [],
+      "last_vote": null
+    }
+  ]
 }

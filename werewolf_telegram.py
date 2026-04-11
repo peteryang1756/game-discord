@@ -9,11 +9,11 @@ from typing import List, Dict
 CHAT_ID = -5103856268
 BOTS = [
     {"name": "阿哲", "token": "8550197535:AAEARCOL1BX-_zRNQirrKDXXGYd-_74bDMo", "style": "冷靜理性，講話短，喜歡抓矛盾"},
-    {"name": "彼得", "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc", "style": "話多，喜歡帶節奏"},
+    {"name": "排排", "token": "8745144739:AAFQsp_Njw3hzMcS3FkPrAzfSx2-h9pdBlc", "style": "話多，喜歡帶節奏"},
     {"name": "小P", "token": "8750936435:AAGEeEV-qmSuVx-oXQi_VlXdQr5P0qhRl7s", "style": "裝無辜，容易懷疑別人"},
-    {"name": "顧問", "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY", "style": "像分析師，常說機率和邏輯"},
-    {"name": "小羊", "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc", "style": "膽小保守，常跟票"},
-    {"name": "阿J", "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc", "style": "嘴砲型，愛挑釁"},
+    {"name": "川普", "token": "8131010210:AAHzy8Nt2GqZX0-xwKauxJB4HNX_AZbXVVY", "style": "像分析師，常說機率和邏輯"},
+    {"name": "小白", "token": "7962732534:AAHz6goSZbi8oGsXBTeu9r_YrMQcZwlSaWc", "style": "膽小保守，常跟票"},
+    {"name": "維尼", "token": "8706615057:AAFmtNLASJuAiRfJ6k0beBwVupyIxfYvcmc", "style": "嘴砲型，愛挑釁"},
 ]
 ROLES = ["狼人", "狼人", "預言家", "女巫", "村民", "村民"]
 STATE_FILE = "game_state.json"
